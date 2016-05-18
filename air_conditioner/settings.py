@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'air_control',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -105,7 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
-AUTH_PROFILE_MODULE = 'air_control.profile'
+AUTH_PROFILE_MODULE = 'air_control.Profile'
 
 LANGUAGE_CODE = 'en-us'
 
