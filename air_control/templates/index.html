@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block main_text %}
+	<div><p></p></div></br></br>
+    <div class="container">
+		<div class="row">
+			<div class="col-xs-8">
+				<div class="container">
+					<div><h3>空调信息</h3></div>
+					<div class="list-inline">
+						<li><p>风速: {{ speed }}</p></li>
+						<li><p>模式:{{ status }}</p></li>
+					</div>
+					<div>
+						<p><font face="verdana" size=30>17.3°C</font></p>
+					</div>
+				</div>
+			</div>
+			<div class="col-xs-4">
+				<div class="container-fluid">
+					<div><h3 style="text-align:center">操作</h3></div>
+					<div>
+						<button class="btn btn-default pull-left" onclick="post_to('/operator/', {'temperature':0.1})">升温</button>
+						<button class="btn btn-default pull-right" onclick="post_to('/operator/', {'temperature':-0.1})">降温</button>
+					</div></br>
+					<div><p></p></div></br>
+					<div>
+						<button class="btn btn-default pull-left" onclick="post_to('/operator/', {'speed':1})">风速</button>
+						<button class="btn btn-default pull-right" onclick="post_to('/operator/', {'status':1})">模式</button>
+					</div></br>
+				</div>
+			</div>
+		</div>
+    </div>
+
+{% endblock %}
