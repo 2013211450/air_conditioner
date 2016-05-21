@@ -16,6 +16,7 @@ class Room(models.Model):
     host = models.CharField(max_length=32, null=True, default='127.0.0.1:8000', db_index=True)
     ip_address = models.CharField(max_length=32, null=True, default='')
     mode = models.IntegerField(null=True, default=0)
+    link = models.IntegerField(null=True, default=0)
 
     class Meta:
         db_table = 'room_info'

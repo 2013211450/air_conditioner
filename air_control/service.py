@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 import re, socket
-iprule = '([0-9]{1,3}\.){3}[0-9]{1,3}'
+iprule = '[0-9]{2}\.([0-9]{1,3}\.){2}[0-9]{1,3}'
 rule = re.compile(iprule)
 
 def get_host(ipList):
