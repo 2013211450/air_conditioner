@@ -10,18 +10,25 @@ import urllib2, urllib
 from models import Server, Room
 # Create your views here.
 
+def server_init():
+    pass
+
 @login_required
 def profile(request):
     print 'count', Server.objects.count()
     host = get_server_host()
     port = request.get_port()
     if request.user.is_superuser:
+        user = request.user
         page_num = request.GET.get('page_num', 1)
         page_num = int(page_num)
         page_size = 6
         offset = page_size * (page_num - 1)
-        server = Server.objects.get(user_id=request.user.id)
+        server = Server.objects.get(user_id=user.id)
         server.host = host + ':' + port
+        if not server.work:
+            server_init()
+        server.work = 1
         server.save()
         print server.host
         count = Room.objects.filter(host=server.host, link=1).count()
@@ -31,7 +38,7 @@ def profile(request):
         if offset + page_size > count:
             page_size = count - offset
         rooms = Room.objects.filter(host=server.host, link=1)[offset:(offset+page_size)]
-        return render(request, 'center.html', {'rooms': rooms, 'page_num':page_num, 'page_count': page_count, 'user':request.user})
+        return render(request, 'center.html', {'rooms': rooms, 'page_num':page_num, 'page_count': page_count, 'user':user})
     else:
         room = Room.objects.get(user_id=request.user.id)
         print host
@@ -64,13 +71,11 @@ def control_settings(request):
         else:
             resp = {'code': -1, 'reason': '链接主机失败'}
         return JsonResponse(resp)
+
 @login_required
 def admin_settings(request):
     return render(request, 'admin_settings.html')
 
-@login_required
-def update_password(request):
-    pass
 
 
 @login_required
@@ -97,20 +102,46 @@ def account_login(request):
 
 @login_required
 def account_logout(request):
+    user = request.user
+    server = Server.objects.get(user_id=user.id)
+    server.work = 0
+    user.save()
     auth.logout(request)
     return HttpResponseRedirect('/')
+
 
 def communication(request):
     import pdb
     # pdb.set_trace()
-    op = request.POST.get('type', 'login')
-    source = request.POST.get('source', None)
-    ip_port = request.POST.get('ip_port', None)
-    room = Room.objects.get(numbers=source)
-    if not room:
+    if request.method != 'POST':
         return JsonResponse({'type': 'login', 'source': 'host', 'ack_nak': 'NAK'})
-    room.ip_address = ip_port
-    room.link = 1
-    room.save()
-    return JsonResponse({'type':'login', 'source':'host', 'ack_nak': 'ACK'})
+    source = request.POST.get('source', '')
+    room = Room.objects.get(numbers=source)
+    op = request.POST.get('type', 'login')
+    if not room:
+        return JsonResponse({'type': op, 'source': 'host', 'ack_nak': 'NAK'})
+    if op == 'login':
+        ip_port = request.POST.get('ip_port', None)
+        room.ip_address = ip_port
+        room.link = 1
+        room.save()
+        return JsonResponse({'type':'login', 'source':'host', 'ack_nak': 'ACK'})
+    elif op == 'logout':
+        room.link = 0
+        room.save()
+        return JsonResponse({'type':'logout', 'source':'host', 'ack_nak': 'ACK'})
+    elif op == 'require':
+        speed = request.POST.get('speed', 'low')
+        if room.speed == speed:
+            return JsonResponse({'type':'require', 'source':'host', 'ack_nak': 'ACK'})
+        else:
+            pass
+    elif op == 'query_cost':
+        return JsonResponse({'type': 'query_cost', 'source': 'host', 'ack_nak': 'ACK', 'power_consumption': room.power,
+                             'price': room.price, 'total_cost': room.total_cost})
+    elif op == 'query_mode':
+        return JsonResponse({'type': 'query_mode', 'source': 'host', 'ack_nak': 'ACK', 'mode': room.mode})
+
+
+
 

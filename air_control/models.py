@@ -8,15 +8,17 @@ class Room(models.Model):
 
     user_id = models.IntegerField(null=True, default=1, unique=True, db_index=True)
     numbers = models.CharField(max_length=8, null=True, default=0, unique=True)
-    speed = models.IntegerField(null=True, default=1)
-    price = models.FloatField(max_length=8, null=True, default=0.0)
+    speed = models.CharField(max_length=11, null=True, default='low')
+    price = models.FloatField(max_length=8, null=True, default=1.0)
     total_cost = models.FloatField(max_length=8, null=True, default=0.0)
+    power = models.FloatField(max_length=8, null=True, default=0.0)
     room_temperature = models.FloatField(max_length=8, null=True, default=20.0)
     setting_temperature = models.FloatField(max_length=8, null=True, default=20.0)
     host = models.CharField(max_length=32, null=True, default='127.0.0.1:8000', db_index=True)
     ip_address = models.CharField(max_length=32, null=True, default='')
     mode = models.IntegerField(null=True, default=0)
     link = models.IntegerField(null=True, default=0)
+    service = models.IntegerField(null=True, default=0)
 
     class Meta:
         db_table = 'room_info'
@@ -25,9 +27,11 @@ class Server(models.Model):
 
     user_id = models.IntegerField(null=True, default=1, unique=True, db_index=True)
     host = models.CharField(max_length=32, null=True, default='127.0.0.1:8000')
+    work = models.IntegerField(null=True, default=0)
 
     class Meta:
         db_table = 'server_info'
+
 
 class Profile(models.Model):
 

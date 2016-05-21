@@ -62,25 +62,22 @@
 		</div>
         <div id="data_line" style="width: 600px;height:400px;"></div>
         <script type="text/javascript">
-            function randomData() {
-                now = new Date(+now + oneSecond);
-                value = value + Math.random() * 21 - 10;
-                return {
-                    name: now.toString(),
-                    value: Math.round(value)
-                        //[now.getHours(), now.getMinutes(), now.getSeconds()].join(':'),
-                }
+            function get_now() {
+                now = new Date();
+                return now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
             }
-            var data = [];
-            var now = new Date(2007, 9, 3, 12, 59, 59);
-            var oneDay = 24 * 3600 * 1000;
-            var oneSecond = 1000 * 3600;
-            var value = Math.random() * 1000;
+            function get_temperature() {
+                return Math.random() * 100;
+            }
+            var x_data = [];
+            var y_data = [];
             var myChart = echarts.init(document.getElementById("data_line"));
-            for (var i = 0; i < 1000; i++) {
-                data.push(randomData());
+            var now = new Date();
+            for (var i = 20; i >= 0; i --){
+                var start = new Date(now - 10000 * i);
+                x_data.push(start.getHours() + ':' + start.getMinutes() + ':' + start.getSeconds());
+                y_data.push(get_temperature());
             }
-
             var option = {
                 title: {
                     text: '动态数据 + 时间坐标轴'
@@ -89,17 +86,18 @@
                     trigger: 'axis',
                     formatter: function (params) {
                         params = params[0];
-                        return params.name + ':' + params.value[1];
+                        return params.name + ':' + params.value;
                     },
                     axisPointer: {
                         animation: false
                     }
                 },
                 xAxis: {
-                    type: 'time',
+                    type: 'category',
                     splitLine: {
                         show: false
-                    }
+                    },
+                    data: x_data
                 },
                 yAxis: {
                     type: 'value',
@@ -113,19 +111,18 @@
                     type: 'line',
                     showSymbol: false,
                     hoverAnimation: false,
-                    data: data
+                    data : y_data,
                 }]
             };
-            myChart.setOption(option);
-            /*
-            setInterval(function () {
-                data.shift();
-                data.push(randomData());
-                option.series[0].data = data
-                myChart.setOption(option);
 
-            }, 1000);
-            */
+            myChart.setOption(option);
+            setInterval(function () {
+                option.xAxis.data.shift();
+                option.series[0].data.shift();
+                option.xAxis.data.push(get_now());
+                option.series[0].data.push(get_temperature());
+                myChart.setOption(option);
+            }, 5000);
         </script>
     </div>
 
