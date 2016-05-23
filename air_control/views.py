@@ -11,7 +11,10 @@ from models import Server, Room
 # Create your views here.
 
 def server_init():
-    pass
+    rooms = Room.objects.all()
+    for room in rooms:
+        room.service = 0
+        room.save()
 
 @login_required
 def profile(request):
@@ -102,13 +105,31 @@ def account_login(request):
 
 @login_required
 def account_logout(request):
+    # import pdb
+    # pdb.set_trace()
     user = request.user
-    server = Server.objects.get(user_id=user.id)
-    server.work = 0
-    user.save()
+    if user.is_superuser:
+        server = Server.objects.get(user_id=user.id)
+        server.work = 0
+        server.save()
+    else:
+        room = Room.objects.get(user_id=user.id)
+        room.service = 0
+        room.link = 0
+        room.save()
     auth.logout(request)
     return HttpResponseRedirect('/')
 
+def startservice(address):
+    query = Room.objects.select_for_update()
+    count = query.count()
+    if count > 3:
+        return
+    else:
+        room = query.filter(numbers=address).first()
+        room.service = 1
+        room.save()
+        return
 
 def communication(request):
     import pdb
@@ -125,6 +146,7 @@ def communication(request):
         room.ip_address = ip_port
         room.link = 1
         room.save()
+        startservice(source)
         return JsonResponse({'type':'login', 'source':'host', 'ack_nak': 'ACK'})
     elif op == 'logout':
         room.link = 0
