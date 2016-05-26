@@ -20,6 +20,10 @@
         }
 
     </script>
+    <style type="text/css">
+    body{ font-size:12px; line-height:24px;}
+    .exp1{font-size:xx-large;}
+    </style>
 	<div><p></p></div></br></br>
     <div class="row">
         <div id="room_table" class="container" style="display: block">
@@ -34,31 +38,42 @@
     <div class="container">
 		<div class="row">
 			<div class="col-xs-8">
-				<div class="container">
+				<div class="container-fluid">
 					<div><h3>空调信息</h3></div>
 					<div class="list-inline">
 						<li><p>风速: {{ room.speed }}</p></li>
 						<li><p>模式:{{ room.mode }}</p></li>
 					</div>
 					<div>
-						<p><font face="verdana" size=30>17.3°C</font></p>
+						<div style="text-align:center;" class="exp1">17.3°C</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-xs-4">
-				<div class="container-fluid">
-					<div><h3 style="text-align:center">操作</h3></div>
-					<div>
-						<button class="btn btn-default pull-left" onclick="post_to('/operator/', {'temperature':0.1})">升温</button>
-						<button class="btn btn-default pull-right" onclick="post_to('/operator/', {'temperature':-0.1})">降温</button>
-					</div></br>
-					<div><p></p></div></br>
-					<div>
-						<button class="btn btn-default pull-left" onclick="post_to('/operator/', {'speed':1})">风速</button>
-						<button class="btn btn-default pull-right" onclick="post_to('/operator/', {'status':1})">模式</button>
-					</div></br>
+            <div class="col-xs-4">
+                <div class="stage">
+				<div id="pagelet-write" class="pagelet-write">
+                    <div class="edit-wrap">
+                        <div><h3 style="text-align:center">操作</h3></div>
+                            <div>
+                                <button class="btn btn-default pull-left" onclick="post_to('/operator/', {'temperature':0.1})">升温</button>
+                                <button class="btn btn-default pull-right" onclick="post_to('/operator/', {'temperature':-0.1})">降温</button>
+                            </div></br>
+                        <div><p></p></div></br>
+                        <div class="edit-cell edit-btns">
+                            <div class="edit-main">
+                                <div class="list-inline">
+                                    <button type="button" class="edit-btn fb" onclick="post_to('/operator/', {'speed':1})">风速</button>
+                                    <button type="button" class="edit-btn cg" onclick="post_to('/operator/', {'status':1})">模式</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+					</br>
 				</div>
-			</div>
+			    </div>
+            </div>
+
 		</div>
 		<div><p></p></div></br></br></br>
         <div id="data_line" style="width: 600px;height:400px; display: none"></div>

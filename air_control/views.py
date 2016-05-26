@@ -113,10 +113,11 @@ def account_logout(request):
         server.work = 0
         server.save()
     else:
-        room = Room.objects.get(user_id=user.id)
-        room.service = 0
-        room.link = 0
-        room.save()
+        room = Room.objects.filter(user_id=user.id).first()
+        if room:
+            room.service = 0
+            room.link = 0
+            room.save()
     auth.logout(request)
     return HttpResponseRedirect('/')
 
