@@ -21,8 +21,8 @@ def profile(request):
     print 'count', Server.objects.count()
     host = get_server_host()
     port = request.get_port()
-    if request.user.is_superuser:
-        user = request.user
+    user = request.user
+    if user.is_superuser:
         page_num = request.GET.get('page_num', 1)
         page_num = int(page_num)
         page_size = 6
@@ -43,7 +43,7 @@ def profile(request):
         rooms = Room.objects.filter(host=server.host, link=1)[offset:(offset+page_size)]
         return render(request, 'center.html', {'rooms': rooms, 'page_num':page_num, 'page_count': page_count, 'user':user})
     else:
-        room = Room.objects.get(user_id=request.user.id)
+        room = Room.objects.get(user_id=user.id)
         print host
         print port
         room.ip_address = host + ':' + port
