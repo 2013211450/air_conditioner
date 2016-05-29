@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import re, socket
+from models import Room, Server
 iprule = '[0-9]{2}\.([0-9]{1,3}\.){2}[0-9]{1,3}'
 rule = re.compile(iprule)
 
@@ -24,4 +25,12 @@ def get_server_host():
     return get_host(ipList)
 
 
-
+def push_queue(room_id):
+    query = Room.objects.select_for_update()
+    count = query.filter(Room.service=0).count()
+    if count > MAX_SERVICE_NUM:
+        return False
+    room = query.filter(Room.id=room_id).first()
+    room.service = 1
+    room.save()
+    return True
