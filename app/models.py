@@ -33,21 +33,3 @@ class Server(models.Model):
         db_table = 'server_info'
 
 
-class Profile(models.Model):
-
-    '''User扩展信息'''
-    user = models.OneToOneField(User)
-    now_identity= models.CharField(max_length=32, null=True, default='')
-    def __unicode__(self):
-        return self.user.username
-
-    class Meta:
-        db_table = 'account_profile'
-
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-
-post_save.connect(create_user_profile, sender=User)
-
-

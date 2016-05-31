@@ -29,10 +29,10 @@ def get_server_host():
 
 def push_queue(room_id):
     query = Room.objects.select_for_update()
-    count = query.filter(Room.service=0).count()
+    count = query.filter(service=0).count()
     if count > MAX_SERVICE_NUM:
         return False
-    room = query.filter(Room.id=room_id).first()
+    room = query.filter(id=room_id).first()
     room.service = 1
     room.save()
     return True

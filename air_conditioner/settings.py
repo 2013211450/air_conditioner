@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 'django.contrib.sites',
-    'air_control',
+    'app',
     'corsheaders',
 ]
 
@@ -60,7 +60,7 @@ ROOT_URLCONF = 'air_conditioner.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'air_control/templates')]
+        'DIRS': [os.path.join(BASE_DIR, 'app/templates')]
         ,
         'APP_DIRS': True,
         'OPTIONS': {
@@ -110,7 +110,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
-AUTH_PROFILE_MODULE = 'air_control.Profile'
 
 LANGUAGE_CODE = 'en-us'
 
@@ -128,7 +127,7 @@ USE_TZ = True
 CORS_ORIGIN_ALLOW_ALL = True
 STATIC_ROOT = ''
 STATIC_URL = '/static/'
-STATICFILES_DIRS = ( '/Users/liuwei/PycharmProjects/air_conditioner/air_control/static', )
+STATICFILES_DIRS = ( '/Users/liuwei/PycharmProjects/air_conditioner/app/static', )
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',

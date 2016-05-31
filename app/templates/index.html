@@ -45,7 +45,7 @@
 						<li><p>模式:{{ room.mode }}</p></li>
 					</div>
 					<div>
-						<div style="text-align:center;" class="exp1">17.3°C</div>
+						<div style="text-align:center;"><font size=10>17.3°C</font></div>
 					</div>
 				</div>
 			</div>
@@ -133,11 +133,13 @@
 
             myChart.setOption(option);
             setInterval(function () {
+				var temp = get_temperature();)
                 option.xAxis.data.shift();
                 option.series[0].data.shift();
                 option.xAxis.data.push(get_now());
-                option.series[0].data.push(get_temperature());
+                option.series[0].data.push(temp);
                 myChart.setOption(option);
+
             }, 5000);
         </script>
     </div>
