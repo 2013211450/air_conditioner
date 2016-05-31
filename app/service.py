@@ -4,6 +4,8 @@ from models import Room, Server
 iprule = '[0-9]{2}\.([0-9]{1,3}\.){2}[0-9]{1,3}'
 rule = re.compile(iprule)
 
+MAX_SERVICE_NUM = 3
+
 def get_host(ipList):
     if isinstance(ipList, str):
         group = rule.match(ipList)
