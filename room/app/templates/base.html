@@ -37,6 +37,9 @@
 				if (resp.hasOwnProperty('setting_temperature')) {
 					document.getElementById('setting_temperature').innerHTML=resp['setting_temperature'].toFixed(2);
 				}
+				else if(resp.hasOwnProperty('speed')) {
+					document.getElementById('speed_mode').innerHTML=resp['speed_mode'];
+				}
 			}, "json");
 	    }
     </script>
