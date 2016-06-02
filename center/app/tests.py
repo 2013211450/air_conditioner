@@ -26,10 +26,13 @@ if __name__ == '__main__':
         print "ERROR"
     '''
     rooms = Room.objects.all()
+    '''
+    room = Room.objects.first()
+    room.numbers = '111222'
+    room.save()
+    '''
     for room in rooms:
-        room.speed = 0
-        room.mode = 0
-        room.save()
+        print room.numbers
     # room = Room.objects.get(user_id=user.id)
     # server = Server.objects.first()
     # for i in range(8, 11):

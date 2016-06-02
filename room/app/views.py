@@ -11,8 +11,8 @@ from models import Room
 # Create your views here.
 MODE = [u'制冷', u'待机', u'制热']
 MODE_DICT = {'hot':2, 'cold':0, 'wait':1}
-SPEED = [u'待机', u'低速风', u'中速风', u'高速风', u'待机']
-SPEED_DICT = ['low', 'medium', 'hight', 'standby']
+SPEED = [u'待机', u'低速风', u'中速风', u'高速风']
+SPEED_DICT = ['standby', 'low', 'medium', 'hight']
 # SPEED_DICT = {'low':1, 'medium':2, 'hight':3, 'standby':0}
 
 @login_required
@@ -58,11 +58,24 @@ def operator(request):
             if resp['code'] == 0:
                 room.speed = speed
                 room.save()
+            resp = {'code' : 0, 'msg':'success'}
         if request.POST.has_key('temperature'):
+            resp = {'code' : 0, 'msg':'success'}
             temperature = float(request.POST['temperature'])
+            room.mode = query_server_mode(room.host, room.numbers)
+            if room.mode == 0:
+                if room.setting_temperature < 25.0 or temperature < 0:
+                    room.setting_temperature += temperature
+                elif room.setting_temperature > 18.0 and temperature > 0:
+                    room.setting_temperature += temperature
+            elif room.mode == 2:
+                if room.setting_temperature < 30.0 or temperature < 0:
+                    room.setting_temperature += temperature
+                elif room.setting_temperature > 25.0 and temperature > 0:
+                    room.setting_temperature += temperature
             room.setting_temperature += temperature
+            resp['setting_temperature'] = room.setting_temperature
             room.save()
-    resp = {'code' : 0, 'msg':'success'}
     return JsonResponse(resp)
 
 def post_to_server(host, data):
@@ -134,15 +147,18 @@ def get_info(request):
     user = request.user
     attr = request.POST.get('attr', '')
     room = Room.objects.get(user_id=user.id)
-    if attr=='room_temperature' and room.service == 1:
-        if room.speed == 0:
-            room.room_temperature += 0.1 * (room.mode - 1) 
-        elif room.speed == 1:
-            room.room_temperature += 0.2 * (romm.mode - 1)
-        elif room.speed == 2:
-            room.room_temperature += 0.3 * (room.mode - 1)
+    resp = {}
+    try:
+        attr_list = attr.split(',')
+        for r in attr_list:
+            resp[r] = getattr(room, r, '')
+    except Exception, ex:
+        print "get_info: ", ex
+        print attr
+    if room.service == 1:
+        room.room_temperature += room.speed * 0.1 * (room.mode - 1) 
         room.save()
-    return JsonResponse({attr:getattr(room, attr, '')})
+    return JsonResponse(resp)
 
 def communication(request):
     import pdb
@@ -164,5 +180,6 @@ def communication(request):
         room.save()
         return JsonResponse({'type':'stop', 'source': room.numbers, 'ack_nak': 'ACK'})
     elif op == 'check_temperature':
-        return JsonResponse({'type': 'check_temperature', 'source': room.numbers, 'ack_nak': 'ACK', 'power_consumption': room.room_temperature,
+        return JsonResponse({'type': 'check_temperature', 'source': room.numbers, 'ack_nak': 'ACK', 'room_temperature': room.room_temperature,
                 'setting_temperature': room.setting_temperature})
+

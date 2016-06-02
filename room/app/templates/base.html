@@ -33,12 +33,11 @@
             myForm.submit();
         }
 	    function post_to(to,data) {
-		    $.ajax({
-			    type: "POST",
-			    url: to,
-			    data: data,
-			    dataType: "json",
-		    });
+			$.post(to, data, function (resp) {
+				if (resp.hasOwnProperty('setting_temperature')) {
+					document.getElementById('setting_temperature').innerHTML=resp['setting_temperature'].toFixed(2);
+				}
+			}, "json");
 	    }
     </script>
 </head>

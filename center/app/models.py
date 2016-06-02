@@ -33,4 +33,7 @@ class Server(models.Model):
     class Meta:
         db_table = 'server_info'
 
+    @classmethod
+    def get_host(cls):
+        return cls.objects.first().host
 
