@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block main_text %}
+    <script type="text/javascript">
+        function set_address(){
+            $.post("/settings/", {
+                host: $("#host").val(),
+            }, function(data) {
+                var answer = confirm(data['reason']);
+                if (answer) {
+                    location.reload(true);
+                }
+            }, "json");
+            //location.reload(true)
+        }
+        function update(){
+            var table = document.getElementById("room_table");
+            table.style.display = 'none';
+            var my_input = document.getElementById("my_input");
+            my_input.style.display = 'block';
+        }
+		function change_mode() {
+			var now_temp = document.getElementById('room_temperature_style');
+			var set_temp = document.getElementById('setting_temperature_style');
+			var mode = document.getElementById('display_mode')
+			if (now_temp.style.display == 'block') {
+				now_temp.style.display = 'none';
+				set_temp.style.display = 'block';
+				mode.innerHTML = '设定室温'
+			}
+			else {
+				now_temp.style.display = 'block';
+				set_temp.style.display = 'none';
+				mode.innerHTML = '当前室温'
+			}
+		}
+    </script>
+    <style type="text/css">
+    body{ font-size:12px; line-height:24px;}
+    .exp1{font-size:xx-large;}
+    </style>
+	<div><p></p></div></br></br>
+    <div class="row">
+        <div id="room_table" class="container" style="display: block">
+            <div><h3>主机地址: {{ room.host }}</h3></div>
+            <div><button class="btn btn-primary" onclick="update()">修改主机地址</button></div>
+        </div>
+        <div class="container" id="my_input" style="display: none">
+            <input id="host" name="host" maxlength="30" class="kari-nav-input" type="text" placeholder="127.0.0.1:8000" />
+            <button type="submit" id="sub" class="btn btn-primary" onclick="set_address()">确认</button>
+        </div>
+    </div></br>
+    <div class="container">
+		<div class="row">
+			<div class="col-xs-8">
+				<div class="container-fluid">
+					<div><h3>空调信息</h3></div>
+					<div class="list-inline" align="center">
+						<li><p>风速: {{ speed }}</p></li>
+						<li><p id="display_mode">当前室温</p></li>
+						<li><p id="work_mode">{{ mode }}</p></li>
+					</div></br></br>
+					<div>
+						<div style="text-align:center; display:block" id='room_temperature_style'><font size=10 id='room_temperature'>{{ room.room_temperature}}</font></div>
+						<div style="text-align:center; display:None" id='setting_temperature_style'><font size=10 id='setting_temperature'>{{ room.setting_temperature}}</font></div>
+					</div>
+				</div>
+			</div>
+            <div class="col-xs-4">
+                <div class="stage">
+				<div id="pagelet-write" class="pagelet-write">
+                    <div class="edit-wrap">
+                        <div><h3 style="text-align:center">操作</h3></div>
+                            <div>
+                                <button class="btn btn-default pull-left" onclick="post_to('/operator/', {'temperature':0.1})">升温</button>
+                                <button class="btn btn-default pull-right" onclick="post_to('/operator/', {'temperature':-0.1})">降温</button>
+                            </div></br>
+                        <div><p></p></div></br>
+                        <div class="edit-cell edit-btns">
+                            <div class="edit-main">
+                                <div class="list-inline">
+                                    <button type="button" class="edit-btn fb" onclick="post_to('/operator/', {'speed':1})">风速</button>
+                                    <button type="button" class="edit-btn cg" onclick="change_mode()">显示</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+					</br>
+				</div>
+			    </div>
+            </div>
+
+		</div>
+		<div><p></p></div></br></br></br>
+        <div id="data_line" style="width: 600px;height:400px;"></div>
+        <script type="text/javascript">
+            function get_now() {
+                now = new Date();
+                return now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
+            }
+			var answer = 0
+            function get_temperature() {
+				$.post("/get_info/", {
+					attr:'room_temperature',
+					}, function(data) {
+					answer = data['room_temperature'];
+					document.getElementById('room_temperature').innerHTML=data['room_temperature'].toFixed(2);
+					document.getElementById('setting_temperature').innerHTML=data['setting_temperature'].toFixed(2);
+				}, "json");
+            }
+            var x_data = [];
+            var y_data = [];
+            var myChart = echarts.init(document.getElementById("data_line"));
+            var now = new Date();
+            x_data.push(now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds());
+			get_temperature();
+            y_data.push(answer);
+            var option = {
+                title: {
+                    text: '温度曲线图'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function (params) {
+                        params = params[0];
+                        return params.name + '/' + params.value;
+                    },
+                    axisPointer: {
+                        animation: false
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    splitLine: {
+                        show: false
+                    },
+                    data: x_data
+                },
+                yAxis: {
+                    type: 'value',
+                    boundaryGap: [0, '100%'],
+                    splitLine: {
+                        show: false
+                    }
+                },
+                series: [{
+                    name: '模拟数据',
+                    type: 'line',
+                    showSymbol: false,
+                    hoverAnimation: false,
+                    data : y_data,
+                }]
+            };
+
+            myChart.setOption(option);
+            setInterval(function () {
+				get_temperature();
+				if (option.xAxis.data.length >= 20) {
+					option.xAxis.data.shift();
+					option.series[0].data.shift();
+				}
+                option.xAxis.data.push(get_now());
+                option.series[0].data.push(answer);
+                myChart.setOption(option);
+            }, 5000);
+        </script>
+    </div>
+
+{% endblock %}
