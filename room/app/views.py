@@ -161,7 +161,12 @@ def get_info(request):
         print "get_info: ", ex
         print attr
     if room.service == 1:
-        room.room_temperature += room.speed * 0.1 * (room.mode - 1) 
+        room.room_temperature += room.speed * 0.5 * (room.mode - 1)
+        if abs(room.room_temperature - room.setting_temperature) <= 0.1:
+            resp = post_to_server(room.host, {'type':'require', 'source':room.numbers, 'speed':SPEED_DICT[speed]})
+            if resp['code'] == 0:
+                room.speed = 0
+                room.service = 0
         room.save()
     return JsonResponse(resp)
 
@@ -170,13 +175,13 @@ def communication(request):
     # pdb.set_trace()
     if request.method != 'POST':
         resp =  JsonResponse({'type': 'login', 'source': 'host', 'ack_nak': 'NAK'})
-        resp['Access-Control-Allow-Origin'] = '*']
+        resp['Access-Control-Allow-Origin'] = '*'
         return resp
     source = request.POST.get('source', '')
-    room = Room.objects.filter(host=request.get_host()).first()
+    room = Room.objects.filter(ip_address=request.get_host()).first()
     if not room:
-        resp = JsonResponse({'type': op, 'source': 'host', 'ack_nak': 'NAK'})
-        resp['Access-Control-Allow-Origin'] = '*']
+        resp = JsonResponse({'type': request.POST.get('type', ''), 'source': 'host', 'ack_nak': 'NAK'})
+        resp['Access-Control-Allow-Origin'] = '*'
         return resp
     op = request.POST.get('type', 'login')
     if op == 'send':
@@ -184,17 +189,17 @@ def communication(request):
         room.service = 1
         room.save()
         resp = JsonResponse({'type':'send', 'source': room.numbers, 'ack_nak': 'ACK'})
-        resp['Access-Control-Allow-Origin'] = '*']
+        resp['Access-Control-Allow-Origin'] = '*'
         return resp
     elif op == 'stop':
         room.service = 0
         room.save()
         resp = JsonResponse({'type':'stop', 'source': room.numbers, 'ack_nak': 'ACK'})
-        resp['Access-Control-Allow-Origin'] = '*']
+        resp['Access-Control-Allow-Origin'] = '*'
         return resp
     elif op == 'check_temperature':
         resp = JsonResponse({'type': 'check_temperature', 'source': room.numbers, 'ack_nak': 'ACK', 'room_temperature': room.room_temperature,
                 'setting_temperature': room.setting_temperature})
-        resp['Access-Control-Allow-Origin'] = '*']
+        resp['Access-Control-Allow-Origin'] = '*'
         return resp
 

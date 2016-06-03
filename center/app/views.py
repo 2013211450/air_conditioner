@@ -45,9 +45,11 @@ def server_init():
         room.save()
 
 
-def post_to_client(host, data):
+def post_to_client(host, attr):
+    host = host.strip()
+    print 'client host:  ', host
     req = urllib2.Request('http://' + host + '/communication/')
-    data = urllib.urlencode(data)
+    data = urllib.urlencode(attr)
     resp = {'code':-1, 'reason':u'发送失败'}
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
     try:
@@ -59,6 +61,7 @@ def post_to_client(host, data):
             resp = {'code': 0, 'data': content}
     except Exception, ex:
         print ex
+        print attr['type']
     return resp
 
 
@@ -101,6 +104,7 @@ def update_room_info(host):
             resp = post_to_client(room.ip_address, {'type':'send', 'source':'host'})
             if resp['code'] == 0:
                 room.service = 1
+                room.start_service_time = datetime.now()
                 room.save()
             break
 
