@@ -63,7 +63,11 @@ def operator(request):
         if request.POST.has_key('temperature'):
             resp = {'code' : 0, 'msg':'success'}
             temperature = float(request.POST['temperature'])
-            room.mode = query_server_mode(room.host, room.numbers)
+            # room.mode = query_server_mode(room.host, room.numbers)
+            if room.setting_temperature > room.room_temperature + 0.1:
+                room.mode = 2
+            elif room.room_temperature > room.setting_temperature + 0.1:
+                room.mode = 0
             if room.mode == 0:
                 if room.setting_temperature < 25.0 or temperature < 0:
                     room.setting_temperature += temperature
