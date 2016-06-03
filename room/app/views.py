@@ -64,10 +64,12 @@ def operator(request):
             resp = {'code' : 0, 'msg':'success'}
             temperature = float(request.POST['temperature'])
             # room.mode = query_server_mode(room.host, room.numbers)
+            '''
             if room.setting_temperature > room.room_temperature + 0.1:
                 room.mode = 2
             elif room.room_temperature > room.setting_temperature + 0.1:
                 room.mode = 0
+            '''
             if room.mode == 0:
                 if room.setting_temperature < 25.0 or temperature < 0:
                     room.setting_temperature += temperature
@@ -165,6 +167,7 @@ def get_info(request):
         print "get_info: ", ex
         print attr
     if room.service == 1:
+        room.mode = query_server_mode(room.host, room.numbers)
         room.room_temperature += room.speed * 0.5 * (room.mode - 1)
         if abs(room.room_temperature - room.setting_temperature) <= 0.1:
             resp = post_to_server(room.host, {'type':'require', 'source':room.numbers, 'speed':SPEED_DICT[speed]})

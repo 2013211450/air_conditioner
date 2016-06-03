@@ -92,6 +92,10 @@ def update_room_info(host):
         if abs(room.setting_temperature - room.room_temperature) <= 0.1:
             room.service = 0
             resp = post_to_client(room.ip_address, {'type':'stop', 'source': 'host'})
+        if room.setting_temperature > room.room_temperature + 0.5:
+            room.mode = 2
+        elif room.setting_temperature + 0.5 < room.room_temperature:
+            room.mode = 0
         room.power += POWER_PER_MIN[room.speed]
         room.total_cost = room.power * room.price
         room.save()
