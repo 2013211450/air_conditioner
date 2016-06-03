@@ -107,6 +107,10 @@ def connect_to_server(numbers, host, ip_port):
     # pdb.set_trace()
     data = {'type': 'login',  'source': numbers, 'ip_port': ip_port}
     resp = post_to_server(host, data)
+    if resp['code'] == 0:
+        resp['reason'] = u'链接成功'
+    else:
+        resp['reason'] = u'链接失败'
     return resp
 
 def account_login(request):
@@ -165,22 +169,32 @@ def communication(request):
     import pdb
     # pdb.set_trace()
     if request.method != 'POST':
-        return JsonResponse({'type': 'login', 'source': 'host', 'ack_nak': 'NAK'})
+        resp =  JsonResponse({'type': 'login', 'source': 'host', 'ack_nak': 'NAK'})
+        resp['Access-Control-Allow-Origin'] = '*']
+        return resp
     source = request.POST.get('source', '')
     room = Room.objects.filter(host=request.get_host()).first()
     if not room:
-        return JsonResponse({'type': op, 'source': 'host', 'ack_nak': 'NAK'})
+        resp = JsonResponse({'type': op, 'source': 'host', 'ack_nak': 'NAK'})
+        resp['Access-Control-Allow-Origin'] = '*']
+        return resp
     op = request.POST.get('type', 'login')
     if op == 'send':
         ip_port = request.POST.get('ip_port', None)
         room.service = 1
         room.save()
-        return JsonResponse({'type':'send', 'source': room.numbers, 'ack_nak': 'ACK'})
+        resp = JsonResponse({'type':'send', 'source': room.numbers, 'ack_nak': 'ACK'})
+        resp['Access-Control-Allow-Origin'] = '*']
+        return resp
     elif op == 'stop':
         room.service = 0
         room.save()
-        return JsonResponse({'type':'stop', 'source': room.numbers, 'ack_nak': 'ACK'})
+        resp = JsonResponse({'type':'stop', 'source': room.numbers, 'ack_nak': 'ACK'})
+        resp['Access-Control-Allow-Origin'] = '*']
+        return resp
     elif op == 'check_temperature':
-        return JsonResponse({'type': 'check_temperature', 'source': room.numbers, 'ack_nak': 'ACK', 'room_temperature': room.room_temperature,
+        resp = JsonResponse({'type': 'check_temperature', 'source': room.numbers, 'ack_nak': 'ACK', 'room_temperature': room.room_temperature,
                 'setting_temperature': room.setting_temperature})
+        resp['Access-Control-Allow-Origin'] = '*']
+        return resp
 

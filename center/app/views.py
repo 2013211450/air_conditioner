@@ -94,7 +94,7 @@ def update_room_info(host):
         room.save()
     service_count = query.filter(service=1).count()
     if service_count < 3:
-        rooms = query.filter(service=0, speed>0).all()
+        rooms = query.filter(service=0, speed__gt=0).all()
         for room in rooms:
             if abs(room.setting_temperature - room.room_temperature) <= 0.1:
                 continue
@@ -212,39 +212,57 @@ def communication(request):
     import pdb
     # pdb.set_trace()
     if request.method != 'POST':
-        return JsonResponse({'type': 'login', 'source': 'host', 'ack_nak': 'NAK'})
+        resp = JsonResponse({'type': 'login', 'source': 'host', 'ack_nak': 'NAK'})
+        resp['Access-Control-Allow-Origin'] = '*'
+        return resp
     source = request.POST.get('source', '')
     room = Room.objects.select_for_update().get(numbers=source)
     op = request.POST.get('type', 'login')
     if not room:
-        return JsonResponse({'type': op, 'source': 'host', 'ack_nak': 'NAK'})
+        resp = JsonResponse({'type': op, 'source': 'host', 'ack_nak': 'NAK'})
+        resp['Access-Control-Allow-Origin'] = '*'
+        return resp
     if op == 'login':
         ip_port = request.POST.get('ip_port', None)
         room.ip_address = ip_port
         room.host = Server.get_host()
         room.link = 1
         room.save()
-        return JsonResponse({'type':'login', 'source':'host', 'ack_nak': 'ACK'})
+        print "========================="
+        resp = JsonResponse({'type':'login', 'source':'host', 'ack_nak': 'ACK'})
+        resp['Access-Control-Allow-Origin'] = '*'
+        return resp
     elif op == 'logout':
         room.link = 0
         room.save()
-        return JsonResponse({'type':'logout', 'source':'host', 'ack_nak': 'ACK'})
+        resp = JsonResponse({'type':'logout', 'source':'host', 'ack_nak': 'ACK'})
+        resp['Access-Control-Allow-Origin'] = '*'
+        return resp
     elif op == 'require':
         speed = request.POST.get('speed', 'low')
+        resp = {}
         if SPEED[room.speed] == speed:
-            return JsonResponse({'type':'require', 'source':'host', 'ack_nak': 'ACK'})
+            resp = JsonResponse({'type':'require', 'source':'host', 'ack_nak': 'ACK'})
         elif room.service == 0:
             room.speed = RESPEED[speed]
             room.save()
+            resp = JsonResponse({'type':'require', 'source':'host', 'ack_nak': 'ACK'})
         else:
             room.service = 0
             room.speed = RESPEED[speed]
             room.save()
+            resp = JsonResponse({'type':'require', 'source':'host', 'ack_nak': 'ACK'})
+        resp['Access-Control-Allow-Origin'] = '*'
+        return resp
     elif op == 'query_cost':
-        return JsonResponse({'type': 'query_cost', 'source': 'host', 'ack_nak': 'ACK', 'power_consumption': room.power,
+        resp = JsonResponse({'type': 'query_cost', 'source': 'host', 'ack_nak': 'ACK', 'power_consumption': room.power,
                              'price': room.price, 'total_cost': room.total_cost})
+        resp['Access-Control-Allow-Origin'] = '*'
+        return resp
     elif op == 'query_mode':
-        return JsonResponse({'type': 'query_mode', 'source': 'host', 'ack_nak': 'ACK', 'mode': MODE[room.mode]})
+        resp = JsonResponse({'type': 'query_mode', 'source': 'host', 'ack_nak': 'ACK', 'mode': MODE[room.mode]})
+        resp['Access-Control-Allow-Origin'] = '*'
+        return resp
 
 
 
