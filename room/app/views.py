@@ -28,6 +28,7 @@ def profile(request):
     room.ip_address = host + ':' + port
     if room.link == 1:
         room.mode = query_server_mode(room.host, room.numbers)
+        update_cost(room)
     room.save()
     print room.ip_address
     return render(request, 'index.html', {'user': request.user, 'room':room, 'speed':SPEED[room.speed], 'mode': MODE[room.mode]})
@@ -109,6 +110,13 @@ def query_server_mode(host, numbers):
         return MODE_DICT[data['mode']]
     return 0
 
+def update_cost(room):
+    res = post_to_server(room.host, {'source': room.numbers, 'type':'query_cost'})
+    if res['code'] == 0:
+        room.power = res['power_consumption']
+        room.price = res['price']
+        room.total_cost = res['total_cost']
+
 def connect_to_server(numbers, host, ip_port):
     # pdb.set_trace()
     data = {'type': 'login',  'source': numbers, 'ip_port': ip_port}
@@ -158,11 +166,13 @@ def get_info(request):
     user = request.user
     attr = request.POST.get('attr', '')
     room = Room.objects.get(user_id=user.id)
-    resp = {}
+    res = {}
     try:
         attr_list = attr.split(',')
         for r in attr_list:
-            resp[r] = getattr(room, r, '')
+            res[r] = getattr(room, r, '')
+        if res.has_key('speed'):
+            res['speed'] = SPEED[int(res['speed'])]
     except Exception, ex:
         print "get_info: ", ex
         print attr
@@ -175,7 +185,7 @@ def get_info(request):
                 room.speed = 0
                 room.service = 0
         room.save()
-    return JsonResponse(resp)
+    return JsonResponse(res)
 
 def communication(request):
     import pdb

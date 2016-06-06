@@ -176,6 +176,9 @@ def account_login(request):
             auth.login(request, user)
             print request.user.username
             server = Server.objects.filter(user_id=request.user.id).first()
+            if not server:
+                auth.logout(request, user)
+                return JsonResponse({'code': -1, 'reason': '用户不存在'})
             server.work = 1
             server.save()
             server_init()
