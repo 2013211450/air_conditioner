@@ -42,3 +42,4 @@ def push_queue(room_id):
     room.service = 1
     room.save()
     return True
+

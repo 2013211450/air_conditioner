@@ -4,7 +4,8 @@ import django
 
 import socket
 import sys, os
-sys.path.append('/home/liuwei/air_conditioner/center/')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(BASE_DIR)
 os.environ['DJANGO_SETTINGS_MODULE'] = 'air_conditioner.settings'
 django.setup()
 from django.contrib.auth.models import User
@@ -12,6 +13,7 @@ from app.models import Room, Server
 from app.service import get_server_host
 
 if __name__ == '__main__':
+    print BASE_DIR
     '''
     print get_server_host()
     user = User.objects.filter(username='liuwei').first()

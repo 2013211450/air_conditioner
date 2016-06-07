@@ -5,10 +5,10 @@ from django.contrib.auth.decorators  import login_required
 from django.contrib.auth.models import User
 from django.contrib import auth
 from service import get_server_host
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import json
 import urllib2, urllib
-from models import Server, Room
+from models import Server, Room, CostPerDay
 # Create your views here.
 MODE = ['cold', 'wait', 'hot']
 
@@ -78,6 +78,15 @@ def query_room_temperature(host, numbers):
     return ans
 
 
+def update_cost(room_id, power, price):
+    new_cost = CostPerDay.objects.filter(room_id=room_id).first()
+    if not new_cost:
+        new_cost = CostPerDay.objects.create(room_id=room_id, create_time=date.today())
+    new_cost.power += power
+    new_cost.day_cost += power * price
+    new_cost.save()
+
+
 def update_room_info(host):
     query = Room.objects.select_for_update().filter(host=host, link=1)
     for room in query.all():
@@ -96,6 +105,7 @@ def update_room_info(host):
             room.mode = 2
         elif room.setting_temperature + 0.5 < room.room_temperature:
             room.mode = 0
+        update_cost(room.id, POWER_PER_MIN[room.speed], room.price)
         room.power += POWER_PER_MIN[room.speed]
         room.total_cost = room.power * room.price
         room.save()

@@ -37,3 +37,14 @@ class Server(models.Model):
     def get_host(cls):
         return cls.objects.first().host
 
+class CostPerDay(models.Model):
+
+    room_id = models.IntegerField(null=True, default=1, unique=True, db_index=True),
+    power = models.FloatField(max_length=8, null=True, default=0.0)
+    day_cost = models.FloatField(max_length=8, null=True, default=0.0)
+    create_time = models.DateField(null=True, default=None)
+
+    class Meta:
+        db_table = 'cost_per_day'
+
+
