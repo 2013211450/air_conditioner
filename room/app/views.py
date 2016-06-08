@@ -12,7 +12,7 @@ from models import Room
 MODE = [u'制冷', u'未链接', u'制热']
 MODE_DICT = {'hot':2, 'cold':0, 'wait':1}
 SPEED = [u'待机', u'低速风', u'中速风', u'高速风']
-SPEED_DICT = ['standby', 'low', 'medium', 'hight']
+SPEED_DICT = ['standby', 'low', 'medium', 'high']
 # SPEED_DICT = {'low':1, 'medium':2, 'hight':3, 'standby':0}
 
 @login_required
@@ -55,12 +55,13 @@ def operator(request):
         room = Room.objects.filter(user_id=request.user.id).first()
         print "request info: ", request.POST
         if request.POST.has_key('speed'):
-            speed = int(request.POST['speed'])
-            speed = (speed + 1) % 4
+            speed = (room.speed + 1) % 4
             resp = post_to_server(room.host, {'type':'require', 'source':room.numbers, 'speed':SPEED_DICT[speed]})
             if resp['code'] == 0:
                 room.speed = speed
                 room.save()
+            else:
+                print resp['code']
             resp = {'code' : 0, 'msg':'success'}
             resp['speed_mode'] = SPEED[room.speed] 
         if request.POST.has_key('temperature'):
@@ -89,12 +90,14 @@ def operator(request):
     return JsonResponse(resp)
 
 def post_to_server(host, data):
+    print "host__:  ", host
     req = urllib2.Request('http://' + host + '/communication/')
     data = urllib.urlencode(data)
     resp = {'code':-1, 'reason':u'发送失败'}
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
     try:
         response = opener.open(req, data, timeout=2)
+        print "_____request_________________"
         content = response.read()
         if isinstance(content, str):
             content = json.loads(content)
@@ -182,12 +185,14 @@ def get_info(request):
     if room.service == 1:
         mode = query_server_mode(room.host, room.numbers)
         room.room_temperature += room.speed * 0.5 * (mode - 1)
-        if abs(room.room_temperature - room.setting_temperature) <= 0.1:
+        '''
+        if (room.room_temperature >= room.setting_temperature + 0.1 and mode == 2) or (room.room_temperature <= room.setting_temperature - 0.1)):
             resp = post_to_server(room.host, {'type':'require', 'source':room.numbers, 'speed':SPEED_DICT[speed]})
-            if resp['code'] == 0:
-                room.speed = 0
-                room.service = 0
+            # if resp['code'] == 0:
+            room.speed = 0
+            room.service = 0
         room.save()
+        '''
     return JsonResponse(res)
 
 def communication(request):
