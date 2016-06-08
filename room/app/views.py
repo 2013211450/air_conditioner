@@ -62,7 +62,7 @@ def operator(request):
                 room.speed = speed
                 room.save()
             resp = {'code' : 0, 'msg':'success'}
-            resp['speed'] = SPEED[room.speed] 
+            resp['speed_mode'] = SPEED[room.speed] 
         if request.POST.has_key('temperature'):
             resp = {'code' : 0, 'msg':'success'}
             temperature = float(request.POST['temperature'])
