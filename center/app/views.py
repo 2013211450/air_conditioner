@@ -299,7 +299,7 @@ def communication(request):
         resp['Access-Control-Allow-Origin'] = '*'
         return resp
     elif op == 'query_mode':
-        resp = JsonResponse({'type': 'query_mode', 'source': 'host', 'ack_nak': 'ACK', 'mode': MODE[room.mode]})
+        resp = JsonResponse({'type': 'query_mode', 'source': 'host', 'ack_nak': 'ACK', 'mode': MODE[Server.get_attr('mode')]})
         resp['Access-Control-Allow-Origin'] = '*'
         return resp
 
