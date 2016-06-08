@@ -41,14 +41,13 @@ def server_init():
     for room in rooms:
         room.service = 0
         room.link = 0
-        room.mode = 0
         room.save()
 
 
 def post_to_client(host, attr):
     host = host.strip()
     print 'client host:  ', host
-    req = urllib2.Request('http://' + host + '/communication/')
+    req = urllib2.Request(host + '/communication/')
     data = urllib.urlencode(attr)
     resp = {'code':-1, 'reason':u'发送失败'}
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
@@ -101,10 +100,6 @@ def update_room_info(host):
         if abs(room.setting_temperature - room.room_temperature) <= 0.1:
             room.service = 0
             resp = post_to_client(room.ip_address, {'type':'stop', 'source': 'host'})
-        if room.setting_temperature > room.room_temperature + 0.5:
-            room.mode = 2
-        elif room.setting_temperature + 0.5 < room.room_temperature:
-            room.mode = 0
         update_cost(room.id, POWER_PER_MIN[room.speed], room.price)
         room.power += POWER_PER_MIN[room.speed]
         room.total_cost = room.power * room.price
@@ -144,7 +139,7 @@ def profile(request):
     server.work = 1
     server.save()
     print server.host
-    count = Room.objects.filter(host=server.host, link=1).count()
+    count = Room.objects.filter(host=server.host).count()
     page_count = (count + page_size - 1)/ page_size
     if page_count < 1:
         page_count = 1
@@ -152,7 +147,7 @@ def profile(request):
         offset = count
     if offset + page_size > count:
         page_size = count - offset
-    rooms = Room.objects.filter(host=server.host, link=1)[offset:(offset+page_size)]
+    rooms = Room.objects.filter(host=server.host)[offset:(offset+page_size)]
     data = []
     for room in rooms:
         is_service = u'服务中'
@@ -171,11 +166,12 @@ def profile(request):
             'setting_temperature': room.setting_temperature,
             'total_cost': room.total_cost,
             })
-    return render(request, 'center.html', {'list': data, 'page_num':page_num, 'page_count': page_count, 'user':user, 'host': host})
+    return render(request, 'center.html', {'list': data, 'page_num':page_num, 'page_count': page_count, 'user':user, 'host': host, 'report':u'日报表', 'mode': u'制冷'})
 
 
 def account_login(request):
     if request.method == 'POST':
+
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
         auth_user = User.objects.filter(username=username).first()
@@ -186,6 +182,11 @@ def account_login(request):
             auth.login(request, user)
             print request.user.username
             server = Server.objects.filter(user_id=request.user.id).first()
+            today = date.today()
+            if today.month > 3 and today.month < 10:
+                server.mode = 0
+            else:
+                server.mode = 2
             if not server:
                 auth.logout(request, user)
                 return JsonResponse({'code': -1, 'reason': '用户不存在'})
@@ -228,6 +229,9 @@ def startservice(numbers):
         room.save()
         return True
 
+@login_required
+def change_mode(request):
+    pass
 
 def communication(request):
     import pdb

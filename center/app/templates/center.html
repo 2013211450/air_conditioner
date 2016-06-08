@@ -4,10 +4,27 @@
 		setInterval(function() {
 				location.reload();
 			}, 20000);
+	function change_mode(attr) {
+		$.post('/change/', {
+			type: attr,
+		}, function(data) {
+			document.getElementById(attr+'_id').innerHTML=data['result'];
+		}, "json");
+	}
     </script>
 	<div></div></br></br></br>
     <div><h1 style="text-align:center">中央空调控制器</h1></div></br></br></br>
     <div class="container" id="global_container">
+		<div class="container-fluid">
+			<div class="list-inline">
+				<li><p id="mode_id">模式：{{mode}}</p></li>
+				<li><p id="report_id">类型：{{report}}</p></li>
+			</div>
+			<div class="list-inline">
+				<li><button type="button" class="edit-btn cg" onclick="change_mode('mode')">工作模式</button></li>
+				<li><button type="button" class="edit-btn cg" onclick="change_mode('report')">更改报表类型</button></li>
+			</div>
+		</div></br></br></br> 
         <div class="row">
 			<table width="1000" border="2" cellspacing="1" class="table">
 				<tr>
@@ -28,7 +45,6 @@
 						<td>{{ room.room_temperature }}</td>
 						<td>{{ room.setting_temperature }}</td>
 						<td>{{ room.service }}</td>
-						<td>{{ room.mode }}</td>
 						<td>{{ room.speed }}</td>
 						<td>{{ room.power }}</td>
 						<td>{{ room.total_cost }}</td>
@@ -36,24 +52,6 @@
 				{% endfor %}
 			</table>
         </div>
-        {% if rooms|length > 3 %}
-        <div class="row">
-            {% for room in rooms|slice:"3:" %}
-                <div class="col-xs-4">
-                    <div class="container">
-						<div><h3 id="{{ room.numbers }}">房间号{{ room.numbers }}</h3></div>
-                            <div class="list-inline">
-                                <li><p>风速: {{ room.speed }}</p></li>
-                                <li><p>模式: {{ room.mode }}</p></li>
-                            </div>
-                        <div>
-                            <p><font face="verdana" size=30>{{ room.room_temperature }}°C</font></p>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-        {% endif %}
         <div class="pagination">
             <ul>
                 <li>

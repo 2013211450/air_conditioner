@@ -16,7 +16,6 @@ class Room(models.Model):
     setting_temperature = models.FloatField(max_length=8, null=True, default=20.0)
     host = models.CharField(max_length=32, null=True, default='127.0.0.1:8000', db_index=True)
     ip_address = models.CharField(max_length=32, null=True, default='')
-    mode = models.IntegerField(null=True, default=0)
     link = models.IntegerField(null=True, default=0)
     service = models.IntegerField(null=True, default=0)
     start_service_time = models.DateTimeField(null=True, default=None)
@@ -29,6 +28,7 @@ class Server(models.Model):
     user_id = models.IntegerField(null=True, default=1, unique=True, db_index=True)
     host = models.CharField(max_length=32, null=True, default='127.0.0.1:8000')
     work = models.IntegerField(null=True, default=0)
+    mode = models.IntegerField(null=True, default=0)
 
     class Meta:
         db_table = 'server_info'

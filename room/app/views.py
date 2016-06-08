@@ -9,7 +9,7 @@ import json
 import urllib2, urllib
 from models import Room
 # Create your views here.
-MODE = [u'制冷', u'待机', u'制热']
+MODE = [u'制冷', u'未链接', u'制热']
 MODE_DICT = {'hot':2, 'cold':0, 'wait':1}
 SPEED = [u'待机', u'低速风', u'中速风', u'高速风']
 SPEED_DICT = ['standby', 'low', 'medium', 'hight']
@@ -26,12 +26,13 @@ def profile(request):
     print host
     print port
     room.ip_address = host + ':' + port
+    mode = 1
     if room.link == 1:
-        room.mode = query_server_mode(room.host, room.numbers)
+        mode = query_server_mode(room.host, room.numbers)
         update_cost(room)
     room.save()
     print room.ip_address
-    return render(request, 'index.html', {'user': request.user, 'room':room, 'speed':SPEED[room.speed], 'mode': MODE[room.mode]})
+    return render(request, 'index.html', {'user': request.user, 'room':room, 'speed':SPEED[room.speed], 'mode': MODE[mode]})
 
 @login_required
 def control_settings(request):
@@ -40,7 +41,8 @@ def control_settings(request):
         host = request.POST.get('host', '127.0.0.1:8000')
         room = Room.objects.get(user_id=request.user.id)
         room.host = host
-        room.ip_address = get_server_host() + ':' + request.get_port()
+        room.ip_address = 'http://' + get_server_host() + ':' + request.get_port()
+        print room.ip_address
         resp = connect_to_server(room.numbers, room.host, room.ip_address)
         if resp['code'] == 0:
             room.link = 1
@@ -64,19 +66,19 @@ def operator(request):
         if request.POST.has_key('temperature'):
             resp = {'code' : 0, 'msg':'success'}
             temperature = float(request.POST['temperature'])
-            # room.mode = query_server_mode(room.host, room.numbers)
+            mode = query_server_mode(room.host, room.numbers)
             '''
             if room.setting_temperature > room.room_temperature + 0.1:
                 room.mode = 2
             elif room.room_temperature > room.setting_temperature + 0.1:
                 room.mode = 0
             '''
-            if room.mode == 0:
+            if mode == 0:
                 if room.setting_temperature < 25.0 or temperature < 0:
                     room.setting_temperature += temperature
                 elif room.setting_temperature > 18.0 and temperature > 0:
                     room.setting_temperature += temperature
-            elif room.mode == 2:
+            elif mode == 2:
                 if room.setting_temperature < 30.0 or temperature < 0:
                     room.setting_temperature += temperature
                 elif room.setting_temperature > 25.0 and temperature > 0:
@@ -177,8 +179,8 @@ def get_info(request):
         print "get_info: ", ex
         print attr
     if room.service == 1:
-        room.mode = query_server_mode(room.host, room.numbers)
-        room.room_temperature += room.speed * 0.5 * (room.mode - 1)
+        mode = query_server_mode(room.host, room.numbers)
+        room.room_temperature += room.speed * 0.5 * (mode - 1)
         if abs(room.room_temperature - room.setting_temperature) <= 0.1:
             resp = post_to_server(room.host, {'type':'require', 'source':room.numbers, 'speed':SPEED_DICT[speed]})
             if resp['code'] == 0:
