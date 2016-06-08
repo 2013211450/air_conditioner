@@ -152,10 +152,11 @@ def profile(request):
     rooms = Room.objects.filter(host=server.host)[offset:(offset+page_size)]
     data = []
     for room in rooms:
+        print 'is_link: ', room.link 
         is_service = u'服务中'
         if not room.service:
             is_service = u'未服务'
-        room_mode = MODE_DICT[MODE[room.mode]]
+        room_mode = MODE_DICT[MODE[Server.get_attr('mode')]]
         room_speed = SPEED_DICT[SPEED[room.speed]]
         data.append({
             'numbers':room.numbers,

@@ -115,9 +115,10 @@ def query_server_mode(host, numbers):
 def update_cost(room):
     res = post_to_server(room.host, {'source': room.numbers, 'type':'query_cost'})
     if res['code'] == 0:
-        room.power = res['power_consumption']
-        room.price = res['price']
-        room.total_cost = res['total_cost']
+        data = res['data']
+        room.power = data['power_consumption']
+        room.price = data['price']
+        room.total_cost = data['total_cost']
 
 def connect_to_server(numbers, host, ip_port):
     # pdb.set_trace()

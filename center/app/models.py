@@ -37,6 +37,11 @@ class Server(models.Model):
         db_table = 'server_info'
 
     @classmethod
+    def get_attr(cls, attr):
+        server = cls.objects.first()
+        return getattr(server, attr, None)
+
+    @classmethod
     def get_host(cls):
         return cls.objects.first().host
 
@@ -61,13 +66,14 @@ class Server(models.Model):
     @classmethod
     def get_report_days(cls):
         server = cls.objects.first()
-        days = [1, 7, 31]
+        print server.report
+        days = [1, 7, 31, 365]
         return days[server.report]
 
 
 class CostPerDay(models.Model):
 
-    room_id = models.IntegerField(null=True, default=1, unique=True, db_index=True),
+    room_id = models.IntegerField(null=True, default=1, unique=True, db_index=True)
     day_power = models.FloatField(max_length=8, null=True, default=0.0)
     day_cost = models.FloatField(max_length=8, null=True, default=0.0)
     create_time = models.DateField(null=True, default=None)
@@ -79,7 +85,7 @@ class CostPerDay(models.Model):
     def get_cost(cls, roomid=1, back=1):
         today = date.today()
         last_day = today - timedelta(days=back)
-        res = cls.objects.filter(room_id=room_id, create_time__range=[last_day.strftime('%Y-%m-%d'),
+        res = cls.objects.filter(room_id=roomid, create_time__range=[last_day.strftime('%Y-%m-%d'),
             today.strftime('%Y-%m-%d')]).all()
         ans = 0.0
         for r in res:
@@ -90,8 +96,7 @@ class CostPerDay(models.Model):
     def get_power(cls, roomid=1, back=1):
         today = date.today()
         last_day = today - timedelta(days=back)
-        res = cls.objects.filter(room_id=room_id, create_time__range=[last_day.strftime('%Y-%m-%d'),
-            today.strftime('%Y-%m-%d')]).all()
+        res = cls.objects.filter(room_id=roomid, create_time__range=[last_day, today]).all()
         ans = 0.0
         for r in res:
             ans += r.day_power
