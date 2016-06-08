@@ -78,16 +78,16 @@ def query_room_temperature(host, numbers):
 
 
 def update_cost(room_id, power, price):
-    new_cost = CostPerDay.objects.filter(room_id=room_id).first()
+    new_cost = CostPerDay.objects.filter(room_id=room_id, create_time=date.today()).first()
     if not new_cost:
         new_cost = CostPerDay.objects.create(room_id=room_id, create_time=date.today())
-    new_cost.power += power
+    new_cost.day_power += power
     new_cost.day_cost += power * price
     new_cost.save()
 
-
-def update_room_info(host):
-    query = Room.objects.select_for_update().filter(host=host, link=1)
+@login_required
+def update_room_info(request):
+    query = Room.objects.select_for_update().filter(host=Server.get_host(), link=1)
     for room in query.all():
         resp = query_room_temperature(room.ip_address, room.numbers)
         if not room.link:
@@ -100,6 +100,7 @@ def update_room_info(host):
         if abs(room.setting_temperature - room.room_temperature) <= 0.1:
             room.service = 0
             resp = post_to_client(room.ip_address, {'type':'stop', 'source': 'host'})
+        print 'numbers', room.numbers
         update_cost(room.id, POWER_PER_MIN[room.speed], room.price)
         room.power += POWER_PER_MIN[room.speed]
         room.total_cost = room.power * room.price
@@ -117,6 +118,8 @@ def update_room_info(host):
                 room.save()
             break
 
+    return JsonResponse({'code': 0})
+
 
 @login_required
 def profile(request):
@@ -131,7 +134,6 @@ def profile(request):
     page_size = 6
     offset = page_size * (page_num - 1)
     server = Server.objects.filter(user_id=user.id).first()
-    update_room_info(server.host)
     host = host + ':' + port
     server.host = host
     if not server.work:
@@ -161,12 +163,14 @@ def profile(request):
             'service': is_service,
             'mode': room_mode,
             'speed': room_speed,
-            'power': room.power,
+            'power': CostPerDay.get_power(room.id, back=Server.get_report_days()),
             'room_temperature': room.room_temperature,
             'setting_temperature': room.setting_temperature,
-            'total_cost': room.total_cost,
+            'total_cost': CostPerDay.get_cost(room.id, back=Server.get_report_days()), 
             })
-    return render(request, 'center.html', {'list': data, 'page_num':page_num, 'page_count': page_count, 'user':user, 'host': host, 'report':u'日报表', 'mode': u'制冷'})
+    return render(request, 'center.html', {'list': data, 'page_num':page_num, 'page_count':
+        page_count, 'user':user, 'host': host, 'report': Server.get_report_name(), 'mode':
+        MODE_DICT[MODE[server.mode]]})
 
 
 def account_login(request):
@@ -229,9 +233,18 @@ def startservice(numbers):
         room.save()
         return True
 
+
 @login_required
-def change_mode(request):
-    pass
+def change_center(request):
+    attr = request.POST.get('type', '')
+    if attr == 'report':
+        Server.change_report()
+        return JsonResponse({'code':0})
+    elif attr == 'mode':
+        Server.change_mode()
+        return JsonResponse({'code':0})
+    else:
+        print 'ERROR PARAM:', attr
 
 def communication(request):
     import pdb

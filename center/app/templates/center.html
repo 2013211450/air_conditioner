@@ -2,13 +2,13 @@
 {% block main_text %}
     <script type="text/javascript">
 		setInterval(function() {
-				location.reload();
-			}, 20000);
+				$.get('/update/');
+			}, 2000);
 	function change_mode(attr) {
 		$.post('/change/', {
 			type: attr,
 		}, function(data) {
-			document.getElementById(attr+'_id').innerHTML=data['result'];
+			location.reload(true);
 		}, "json");
 	}
     </script>
@@ -17,8 +17,8 @@
     <div class="container" id="global_container">
 		<div class="container-fluid">
 			<div class="list-inline">
-				<li><p id="mode_id">模式：{{mode}}</p></li>
-				<li><p id="report_id">类型：{{report}}</p></li>
+				<li><p id="mode_id">{{mode}}</p></li>
+				<li><p id="report_id">{{report}}报表</p></li>
 			</div>
 			<div class="list-inline">
 				<li><button type="button" class="edit-btn cg" onclick="change_mode('mode')">工作模式</button></li>
@@ -35,8 +35,8 @@
 					<th>是否服务</th>
 					<th>工作模式</th>
 					<th>风速</th>
-					<th>耗电量</th>
-					<th>总消费</th>
+					<th>{{report}}电量</th>
+					<th>{{report}}金额</th>
 				</tr>
 				{% for room in list %}
 					<tr>
@@ -51,7 +51,7 @@
 					</tr>
 				{% endfor %}
 			</table>
-        </div>
+		</div></br></br></br></br>
         <div class="pagination">
             <ul>
                 <li>
