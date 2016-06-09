@@ -91,7 +91,7 @@ def operator(request):
 
 def post_to_server(host, data):
     print "host__:  ", host
-    req = urllib2.Request('http://' + host + '/communication/')
+    req = urllib2.Request('http://' + host + '/communication')
     data = urllib.urlencode(data)
     resp = {'code':-1, 'reason':u'发送失败'}
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
@@ -113,7 +113,7 @@ def query_server_mode(host, numbers):
     if resp['code'] == 0:
         data = resp['data']
         return MODE_DICT[data['mode']]
-    return 0
+    return -1
 
 def update_cost(room):
     res = post_to_server(room.host, {'source': room.numbers, 'type':'query_cost'})
@@ -184,6 +184,11 @@ def get_info(request):
         print attr
     if room.service == 1:
         mode = query_server_mode(room.host, room.numbers)
+        if mode == -1:
+            room.link = 0
+            room.service = 0
+            room.save()
+            return JsonResponse(res)
         room.room_temperature += room.speed * 0.5 * (mode - 1)
         room.save()
         '''
@@ -223,7 +228,8 @@ def communication(request):
         resp['Access-Control-Allow-Origin'] = '*'
         return resp
     elif op == 'check_temperature':
-        resp = JsonResponse({'type': 'check_temperature', 'source': room.numbers, 'ack_nak': 'ACK', 'room_temperature': room.room_temperature,
+        resp = JsonResponse({'type': 'check_temperature', 'source': room.numbers, 'ack_nak': 'ACK',
+                'room_temperature': room.room_temperature, 
                 'setting_temperature': room.setting_temperature})
         resp['Access-Control-Allow-Origin'] = '*'
         return resp

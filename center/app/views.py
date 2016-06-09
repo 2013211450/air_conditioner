@@ -47,7 +47,7 @@ def server_init():
 def post_to_client(host, attr):
     host = host.strip()
     print 'client host:  ', host
-    req = urllib2.Request(host + '/communication/')
+    req = urllib2.Request(host + '/communication')
     data = urllib.urlencode(attr)
     resp = {'code':-1, 'reason':u'发送失败'}
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
@@ -65,6 +65,7 @@ def post_to_client(host, attr):
 
 
 def query_room_temperature(host, numbers):
+    print "query====="
     data = {'type':'check_temperature', 'source':'host'}
     resp = post_to_client(host, data)
     ans = {}
@@ -90,6 +91,8 @@ def update_room_info(request):
     mode = Server.get_attr('mode')
     query = Room.objects.select_for_update().filter(host=Server.get_host(), link=1)
     for room in query.all():
+        print room.numbers
+        print room.ip_address
         resp = query_room_temperature(room.ip_address, room.numbers)
         if not room.link:
             continue
@@ -99,6 +102,7 @@ def update_room_info(request):
         else:
             room.link = 0
             room.service = 0
+            print "break link!"
         room.save()
         if not room.service:
             continue
@@ -186,7 +190,6 @@ def profile(request):
 
 def account_login(request):
     if request.method == 'POST':
-
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
         auth_user = User.objects.filter(username=username).first()
@@ -257,6 +260,10 @@ def change_center(request):
     else:
         print 'ERROR PARAM:', attr
 
+def get_rand_name():
+    user = User.objects.order_by("-id").first()
+    return 'test'+str(user.id+1)
+
 def communication(request):
     import pdb
     # pdb.set_trace()
@@ -265,14 +272,15 @@ def communication(request):
         resp['Access-Control-Allow-Origin'] = '*'
         return resp
     source = request.POST.get('source', '')
-    room = Room.objects.select_for_update().get(numbers=source)
     op = request.POST.get('type', 'login')
-    if not room:
-        resp = JsonResponse({'type': op, 'source': 'host', 'ack_nak': 'NAK'})
-        resp['Access-Control-Allow-Origin'] = '*'
-        return resp
+    room = Room.objects.select_for_update().filter(numbers=source).first()
+    print "operator======, ", op
     if op == 'login':
+        if not room:
+            user = User.objects.create(username=get_rand_name(), password='xxxx')
+            room = Room.objects.create(user_id=user.id, numbers=source)
         ip_port = request.POST.get('ip_port', None)
+        print "ip___port:_______  ", ip_port
         room.ip_address = ip_port
         room.host = Server.get_host()
         room.link = 1
@@ -281,7 +289,11 @@ def communication(request):
         resp = JsonResponse({'type':'login', 'source':'host', 'ack_nak': 'ACK'})
         resp['Access-Control-Allow-Origin'] = '*'
         return resp
-    elif op == 'logout':
+    if not room:
+        resp = JsonResponse({'type': op, 'source': 'host', 'ack_nak': 'NAK'})
+        resp['Access-Control-Allow-Origin'] = '*'
+        return resp
+    if op == 'logout':
         room.link = 0
         room.save()
         resp = JsonResponse({'type':'logout', 'source':'host', 'ack_nak': 'ACK'})
@@ -312,6 +324,5 @@ def communication(request):
         resp = JsonResponse({'type': 'query_mode', 'source': 'host', 'ack_nak': 'ACK', 'mode': MODE[Server.get_attr('mode')]})
         resp['Access-Control-Allow-Origin'] = '*'
         return resp
-
 
 

@@ -9,7 +9,7 @@ class Room(models.Model):
 
     user_id = models.IntegerField(null=True, default=1, unique=True, db_index=True)
     numbers = models.CharField(max_length=8, null=True, default=0, unique=True)
-    speed = models.IntegerField(null=True, default='low')
+    speed = models.IntegerField(null=True, default=0)
     price = models.FloatField(max_length=8, null=True, default=1.0)
     total_cost = models.FloatField(max_length=8, null=True, default=0.0)
     power = models.FloatField(max_length=8, null=True, default=0.0)

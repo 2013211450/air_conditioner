@@ -9,7 +9,7 @@ urlpatterns =  patterns('',
     url(r'^account/login/$', account_login, name='account_login'),
     url(r'^account/logout/$', account_logout, name='account_logout'),
     url(r'^change/$', change_center, name='change_mode'),
-    url(r'^communication/$', communication, name='communication'),
+    url(r'^communication$', communication, name='communication'),
     url(r'^update/$', update_room_info, name='update_room_info'),
 
 )

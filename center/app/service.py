@@ -7,19 +7,6 @@ rule = re.compile(iprule)
 
 MAX_SERVICE_NUM = 3
 
-def get_host(ipList):
-    if isinstance(ipList, str):
-        group = rule.match(ipList)
-        if group:
-            return group.group(0)
-        else:
-            return None
-    for ip in ipList:
-        ipresp = get_host(ip)
-        if ipresp:
-            return ipresp
-    return None
-
 
 def get_server_host():
     for i in netifaces.interfaces(): 

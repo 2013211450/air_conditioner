@@ -10,6 +10,6 @@ urlpatterns =  patterns('',
     url(r'^operator/$', operator, name="operator"),
     url(r'^account/login/$', account_login, name='account_login'),
     url(r'^account/logout/$', account_logout, name='account_logout'),
-    url(r'^communication/$', communication, name='communication'),
+    url(r'^communication$', communication, name='communication'),
     url(r'^get_info/$', get_info, name='get_info'),
 )

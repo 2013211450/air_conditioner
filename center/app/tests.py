@@ -9,32 +9,21 @@ sys.path.append(BASE_DIR)
 os.environ['DJANGO_SETTINGS_MODULE'] = 'air_conditioner.settings'
 django.setup()
 from django.contrib.auth.models import User
-from app.models import Room, Server
+from app.models import Room, Server, CostPerDay
 from app.service import get_server_host
+from datetime import datetime, date
 
 if __name__ == '__main__':
     print BASE_DIR
-    '''
-    print get_server_host()
-    user = User.objects.filter(username='liuwei').first()
-    if user:
-        server = Server.objects.filter(user_id=user.id).first()
-        if not server:
-            server = Server.objects.create(user_id=user.id)
-        else:
-            print user.is_superuser
-            print server.id
-    else:
-        print "ERROR"
-    '''
     rooms = Room.objects.all()
+    for room in rooms:
+        room.speed = 0
+        room.save()
     '''
     room = Room.objects.first()
     room.numbers = '111222'
     room.save()
     '''
-    for room in rooms:
-        print room.numbers
     # room = Room.objects.get(user_id=user.id)
     # server = Server.objects.first()
     # for i in range(8, 11):
