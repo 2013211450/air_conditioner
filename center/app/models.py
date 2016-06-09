@@ -73,10 +73,10 @@ class Server(models.Model):
 
 class CostPerDay(models.Model):
 
-    room_id = models.IntegerField(null=True, default=1, unique=True, db_index=True)
+    room_id = models.IntegerField(null=True, default=1, db_index=True)
     day_power = models.FloatField(max_length=8, null=True, default=0.0)
     day_cost = models.FloatField(max_length=8, null=True, default=0.0)
-    create_time = models.DateField(null=True, default=None)
+    create_time = models.DateField(null=True, default=None, db_index=True)
 
     class Meta:
         db_table = 'cost_per_day'

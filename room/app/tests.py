@@ -16,6 +16,7 @@ from app.models import Room
 from app.service import get_server_host
 
 if __name__ == '__main__':
+    '''
     for i in range(1, 10):
         user = User.objects.filter(username='test'+str(i)).first()
         if not user:
@@ -31,6 +32,13 @@ if __name__ == '__main__':
             room = Room.objects.create(user_id=user.id, numbers='40'+str(i), room_temperature=27.9)
             print 'create' 
             print room.id
+    '''
+    rooms = Room.objects.all()
+    for room in rooms:
+        print room.numbers, room.setting_temperature
+        room.speed = 0
+        room.room_temperature = room.setting_temperature
+        room.save()
     # room = Room.objects.get(user_id=user.id)
     # server = Server.objects.first()
     # for i in range(8, 11):

@@ -185,13 +185,13 @@ def get_info(request):
     if room.service == 1:
         mode = query_server_mode(room.host, room.numbers)
         room.room_temperature += room.speed * 0.5 * (mode - 1)
+        room.save()
         '''
         if (room.room_temperature >= room.setting_temperature + 0.1 and mode == 2) or (room.room_temperature <= room.setting_temperature - 0.1)):
             resp = post_to_server(room.host, {'type':'require', 'source':room.numbers, 'speed':SPEED_DICT[speed]})
             # if resp['code'] == 0:
             room.speed = 0
             room.service = 0
-        room.save()
         '''
     return JsonResponse(res)
 

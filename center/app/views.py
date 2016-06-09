@@ -87,6 +87,7 @@ def update_cost(room_id, power, price):
 
 @login_required
 def update_room_info(request):
+    mode = Server.get_attr('mode')
     query = Room.objects.select_for_update().filter(host=Server.get_host(), link=1)
     for room in query.all():
         resp = query_room_temperature(room.ip_address, room.numbers)
@@ -95,10 +96,15 @@ def update_room_info(request):
         if resp['code'] == 0:
             room.setting_temperature = resp['setting_temperature']
             room.room_temperature = resp['room_temperature']
+        else:
+            room.link = 0
+            room.service = 0
+        room.save()
         if not room.service:
             continue
-        if abs(room.setting_temperature - room.room_temperature) <= 0.1:
+        if (room.setting_temperature >= room.room_temperature + 0.1 and mode == 0) or (room.setting_temperature + 0.1 <= room.room_temperature and mode == 2):
             room.service = 0
+            room.speed = 0
             resp = post_to_client(room.ip_address, {'type':'stop', 'source': 'host'})
         print 'numbers', room.numbers
         update_cost(room.id, POWER_PER_MIN[room.speed], room.price)
@@ -109,12 +115,12 @@ def update_room_info(request):
     if service_count < 3:
         rooms = query.filter(service=0, speed__gt=0).all()
         for room in rooms:
-            if abs(room.setting_temperature - room.room_temperature) <= 0.1:
+            if (room.setting_temperature >= room.room_temperature + 0.1 and mode == 0) or (room.setting_temperature + 0.1 <= room.room_temperature and mode == 2):
                 continue
             resp = post_to_client(room.ip_address, {'type':'send', 'source':'host'})
             if resp['code'] == 0:
                 room.service = 1
-                room.start_service_time = datetime.now()
+                room.start_service_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 room.save()
             break
 
@@ -154,11 +160,15 @@ def profile(request):
     for room in rooms:
         print 'is_link: ', room.link 
         is_service = u'服务中'
+        is_link = u'已连接'
         if not room.service:
             is_service = u'未服务'
+        if not room.link:
+            is_link = u'连接已断开'
         room_mode = MODE_DICT[MODE[Server.get_attr('mode')]]
         room_speed = SPEED_DICT[SPEED[room.speed]]
         data.append({
+            'is_link': is_link,
             'numbers':room.numbers,
             'ip_address': room.ip_address,
             'service': is_service,
