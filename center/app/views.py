@@ -58,6 +58,9 @@ def post_to_client(host, attr):
             content = json.loads(content)
         if content['ack_nak'] == 'ACK':
             resp = {'code': 0, 'data': content}
+        else:
+            print "--------post refused-------"
+            print content
     except Exception, ex:
         print ex
         print attr['type']

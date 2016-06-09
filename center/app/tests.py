@@ -18,6 +18,8 @@ if __name__ == '__main__':
     rooms = Room.objects.all()
     for room in rooms:
         room.speed = 0
+        room.service = 0
+        room.link = 0
         room.save()
     '''
     room = Room.objects.first()

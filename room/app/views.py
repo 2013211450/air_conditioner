@@ -17,21 +17,35 @@ SPEED_DICT = ['standby', 'low', 'medium', 'high']
 
 @login_required
 def profile(request):
+    print request.META['HTTP_ACCEPT']
     host = get_server_host()
     port = request.get_port()
     user = request.user
     room = Room.objects.filter(user_id=user.id).first()
     if not room.setting_temperature:
         room.setting_temperature = 20.0
-    print host
-    print port
     room.ip_address = host + ':' + port
     mode = 1
     if room.link == 1:
         mode = query_server_mode(room.host, room.numbers)
+        if mode == -1:
+            room.link = 0
+            room.service = 0
+            room.speed = 0
         update_cost(room)
     room.save()
-    print room.ip_address
+    count = Room.objects.filter(link=1).count()
+    if count > 1:
+        rooms = Room.objects.filter(link=1).all()
+        for r in rooms:
+            if r.user_id == user.id:
+                continue
+            r.link=0
+            r.speed=0
+            r.save()
+
+    print 'ip_address', room.ip_address
+    print 'is_link: ', room.link
     return render(request, 'index.html', {'user': request.user, 'room':room, 'speed':SPEED[room.speed], 'mode': MODE[mode]})
 
 @login_required
@@ -41,9 +55,9 @@ def control_settings(request):
         host = request.POST.get('host', '127.0.0.1:8000')
         room = Room.objects.get(user_id=request.user.id)
         room.host = host
-        room.ip_address = 'http://' + get_server_host() + ':' + request.get_port()
+        room.ip_address = get_server_host() + ':' + request.get_port()
         print room.ip_address
-        resp = connect_to_server(room.numbers, room.host, room.ip_address)
+        resp = connect_to_server(room.numbers, room.host, 'http://'+room.ip_address)
         if resp['code'] == 0:
             room.link = 1
             room.save()
@@ -90,14 +104,12 @@ def operator(request):
     return JsonResponse(resp)
 
 def post_to_server(host, data):
-    print "host__:  ", host
     req = urllib2.Request('http://' + host + '/communication')
     data = urllib.urlencode(data)
     resp = {'code':-1, 'reason':u'发送失败'}
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
     try:
         response = opener.open(req, data, timeout=2)
-        print "_____request_________________"
         content = response.read()
         if isinstance(content, str):
             content = json.loads(content)
@@ -147,6 +159,7 @@ def account_login(request):
                 host = host + ':' + str(port)
                 room.ip_address = host
                 room.link = 0
+                room.speed = 0
                 room.save()
             auth.login(request, user)
             return JsonResponse({'code': 0, 'reason': '登录成功'})
@@ -192,6 +205,7 @@ def get_info(request):
         if mode == -1:
             room.link = 0
             room.service = 0
+            room.speed = 0
             room.save()
             return JsonResponse(res)
         room.room_temperature += room.speed * 0.5 * (mode - 1)
@@ -205,6 +219,7 @@ def get_info(request):
         '''
     return JsonResponse(res)
 
+
 def communication(request):
     import pdb
     # pdb.set_trace()
@@ -214,11 +229,13 @@ def communication(request):
         return resp
     source = request.POST.get('source', '')
     room = Room.objects.filter(ip_address=request.get_host(), link=1).first()
+    op = request.POST.get('type', 'login')
+    print "=====request room========", op
+    print request.get_host()
     if not room:
         resp = JsonResponse({'type': request.POST.get('type', ''), 'source': 'host', 'ack_nak': 'NAK'})
         resp['Access-Control-Allow-Origin'] = '*'
         return resp
-    op = request.POST.get('type', 'login')
     if op == 'send':
         ip_port = request.POST.get('ip_port', None)
         room.service = 1

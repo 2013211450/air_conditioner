@@ -27,7 +27,6 @@ def get_server_host():
         if netifaces.AF_INET not in info:
             continue 
         ip = info[netifaces.AF_INET][0]['addr']
-        print '=====', ip
         group = rule.match(ip.strip())
         if group:
             return group.group(0)
