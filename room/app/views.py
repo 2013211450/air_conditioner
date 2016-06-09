@@ -152,6 +152,11 @@ def account_login(request):
             return JsonResponse({'code': 0, 'reason': '登录成功'})
         else:
             return JsonResponse({'code': -1, 'reason': '登录失败'})
+    else:
+        print request.method
+        print "=======method ERROR!===="
+        return JsonResponse({'code': -1, 'reason': '登录失败'})
+
 
 @login_required
 def account_logout(request):
@@ -159,7 +164,7 @@ def account_logout(request):
     # pdb.set_trace()
     user = request.user
     room = Room.objects.filter(user_id=user.id).first()
-    if room:
+    if room and room.link:
         room.service = 0
         room.link = 0
         room.save()
@@ -208,7 +213,7 @@ def communication(request):
         resp['Access-Control-Allow-Origin'] = '*'
         return resp
     source = request.POST.get('source', '')
-    room = Room.objects.filter(ip_address=request.get_host()).first()
+    room = Room.objects.filter(ip_address=request.get_host(), link=1).first()
     if not room:
         resp = JsonResponse({'type': request.POST.get('type', ''), 'source': 'host', 'ack_nak': 'NAK'})
         resp['Access-Control-Allow-Origin'] = '*'
@@ -233,4 +238,5 @@ def communication(request):
                 'setting_temperature': room.setting_temperature})
         resp['Access-Control-Allow-Origin'] = '*'
         return resp
-
+    else:
+        print op

@@ -65,16 +65,20 @@ def post_to_client(host, attr):
 
 
 def query_room_temperature(host, numbers):
-    print "query====="
+    print "query temperature====="
     data = {'type':'check_temperature', 'source':'host'}
     resp = post_to_client(host, data)
     ans = {}
     if resp['code'] == 0:
+        print "data: "
+        print resp['data']
+        print "========="
         ans['room_temperature'] = resp['data']['room_temperature']
         ans['setting_temperature'] = resp['data']['setting_temperature']
         ans['code'] = 0
     else:
         ans['code'] = -1
+        print "query ERROR!=========="
     return ans
 
 

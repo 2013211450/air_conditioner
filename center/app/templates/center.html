@@ -3,6 +3,7 @@
     <script type="text/javascript">
 		setInterval(function() {
 				$.get('/update/');
+				location.reload(true);
 			}, 2000);
 	function change_mode(attr) {
 		$.post('/change/', {
@@ -34,7 +35,6 @@
 					<th>当前室温</th>
 					<th>设定室温</th>
 					<th>是否服务</th>
-					<th>工作模式</th>
 					<th>风速</th>
 					<th>{{report}}电量</th>
 					<th>{{report}}金额</th>
