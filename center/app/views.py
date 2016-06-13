@@ -113,9 +113,12 @@ def update_room_info(request):
         room.save()
         if not room.service:
             continue
-        if (room.setting_temperature >= room.room_temperature + 0.1 and mode == 0) or (room.setting_temperature + 0.1 <= room.room_temperature and mode == 2):
+        if room.speed == 0:
             room.service = 0
+        if (room.setting_temperature >= room.room_temperature + 0.1 and mode == 0) or (room.setting_temperature + 0.1 <= room.room_temperature and mode == 2):
             room.speed = 0
+            room.service = 0
+        if room.service == 0:
             resp = post_to_client(room.ip_address, {'type':'stop', 'source': 'host'})
         print 'numbers', room.numbers
         update_cost(room.id, POWER_PER_MIN[room.speed], room.price)
@@ -308,18 +311,9 @@ def communication(request):
         return resp
     elif op == 'require':
         speed = request.POST.get('speed', 'low')
-        resp = {}
-        if SPEED[room.speed] == speed:
-            resp = JsonResponse({'type':'require', 'source':'host', 'ack_nak': 'ACK'})
-        elif room.service == 0:
-            room.speed = RESPEED[speed]
-            room.save()
-            resp = JsonResponse({'type':'require', 'source':'host', 'ack_nak': 'ACK'})
-        else:
-            room.service = 0
-            room.speed = RESPEED[speed]
-            room.save()
-            resp = JsonResponse({'type':'require', 'source':'host', 'ack_nak': 'ACK'})
+        room.speed = RESPEED[speed]
+        room.save()
+        resp = JsonResponse({'type':'require', 'source':'host', 'ack_nak': 'ACK'})
         resp['Access-Control-Allow-Origin'] = '*'
         return resp
     elif op == 'query_cost':
