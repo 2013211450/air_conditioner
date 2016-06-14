@@ -37,7 +37,8 @@ if __name__ == '__main__':
     for room in rooms:
         print room.numbers, room.setting_temperature
         room.speed = 0
-        room.room_temperature = room.setting_temperature
+        room.room_temperature = 20.0
+        room.setting_temperature = 20.0
         room.save()
     # room = Room.objects.get(user_id=user.id)
     # server = Server.objects.first()

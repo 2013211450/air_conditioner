@@ -89,16 +89,11 @@ def operator(request):
                 room.mode = 0
             '''
             if mode == 0:
-                if room.setting_temperature < 25.0 or temperature < 0:
-                    room.setting_temperature += temperature
-                elif room.setting_temperature > 18.0 and temperature > 0:
+                if room.setting_temperature < 25.1 and room.setting_temperature > 17.9:
                     room.setting_temperature += temperature
             elif mode == 2:
-                if room.setting_temperature < 30.0 or temperature < 0:
+                if room.setting_temperature < 30.1 and room.setting_temperature > 24.9:
                     room.setting_temperature += temperature
-                elif room.setting_temperature > 25.0 and temperature > 0:
-                    room.setting_temperature += temperature
-            room.setting_temperature += temperature
             resp['setting_temperature'] = room.setting_temperature
             room.save()
     return JsonResponse(resp)

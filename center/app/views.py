@@ -191,7 +191,8 @@ def profile(request):
             'power': CostPerDay.get_power(room.id, back=Server.get_report_days()),
             'room_temperature': room.room_temperature,
             'setting_temperature': room.setting_temperature,
-            'total_cost': CostPerDay.get_cost(room.id, back=Server.get_report_days()), 
+            'total_cost': CostPerDay.get_cost(room.id, back=Server.get_report_days()),
+            'rest_cost': room.total_cost,
             })
     return render(request, 'center.html', {'list': data, 'page_num':page_num, 'page_count':
         page_count, 'user':user, 'host': host, 'report': Server.get_report_name(), 'mode':
@@ -244,6 +245,21 @@ def account_logout(request):
         room.link = 0
         room.save()
 
+@login_required
+def checkout(request):
+    numbers = request.POST.get('numbers', '')
+    room = Room.objects.filter(numbers=numbers).first()
+    if not room:
+        print 'numbers Error %s !' % numbers
+    print 'checkout room.ip_address: ', room.ip_address
+    room.service = 0
+    room.link = 1
+    room.speed = 0
+    room.total_cost = 0
+    room.power = 0
+    room.save()
+    resp = post_to_client(room.ip_address, {'type':'stop', 'source': 'host'})
+    return  JsonResponse({'code':0, 'reason':u'退房成功'})
 
 def startservice(numbers):
     query = Room.objects.select_for_update()
