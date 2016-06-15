@@ -43,6 +43,40 @@ def server_init():
         room.link = 0
         room.save()
 
+@login_required
+def get_report(request):
+    print request.GET
+    room_id = request.GET.get('room_id', None)
+    if not room_id:
+        return HttpResponseRedirect('/')
+    room_id = int(room_id)
+    start_date = request.GET.get('start_date', None)
+    if not start_date:
+        start_date = date.today()
+    end_date = request.GET.get('end_date', None)
+    if not end_date:
+        end_date = date.today()
+    query = CostPerDay.objects.filter(room_id=room_id, create_time__gte=start_date, create_time__lte=end_date)
+    data = query.all()
+    if query.count() > 10:
+        data = data[0:10]
+    resp = {}
+    resp['list'] = []
+    resp['numbers'] = Room.objects.filter(id=room_id).first().numbers
+    total_power = 0.0
+    total_cost = 0.0
+    for r in data:
+        total_power += r.day_power
+        total_cost += r.day_cost
+        resp['list'].append({
+            'date': str(r.create_time),
+            'power': r.day_power,
+            'cost': r.day_cost,
+        })
+    resp['total_cost'] = total_cost
+    resp['total_power'] = total_power
+    return render(request, 'report.html', resp)
+
 
 def post_to_client(host, attr):
     host = host.strip()
@@ -182,6 +216,7 @@ def profile(request):
         room_mode = MODE_DICT[MODE[Server.get_attr('mode')]]
         room_speed = SPEED_DICT[SPEED[room.speed]]
         data.append({
+            'id': room.id,
             'is_link': is_link,
             'numbers':room.numbers,
             'ip_address': room.ip_address,

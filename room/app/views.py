@@ -240,6 +240,7 @@ def communication(request):
         return resp
     elif op == 'stop':
         room.service = 0
+        room.speed = 0
         room.save()
         resp = JsonResponse({'type':'stop', 'source': room.numbers, 'ack_nak': 'ACK'})
         resp['Access-Control-Allow-Origin'] = '*'

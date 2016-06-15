@@ -59,7 +59,6 @@
                     <ul class="nav nav-pills">
                         <!-- index -->
                         <li><a href="{% url 'profile' %}">首页</a></li>
-                        <li><a href="/user_manual/">使用手册</a></li>
                         {% if user.is_authenticated %}
                         <li class="dropdown pull-right">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{user.username}}{% if user.id %}{% else %}习习蛤蛤{% endif %}<span class="caret"></span></a>

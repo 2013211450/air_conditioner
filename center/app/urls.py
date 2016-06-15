@@ -12,5 +12,5 @@ urlpatterns =  patterns('',
     url(r'^communication$', communication, name='communication'),
     url(r'^update/$', update_room_info, name='update_room_info'),
     url(r'^checkout/$', checkout, name='checkout'),
-
+    url(r'^report/$', get_report, name='get_report'),
 )
