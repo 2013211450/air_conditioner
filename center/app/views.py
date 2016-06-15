@@ -80,7 +80,6 @@ def get_report(request):
 
 def post_to_client(host, attr):
     host = host.strip()
-    print 'client host:  ', host
     req = urllib2.Request(host + '/communication')
     data = urllib.urlencode(attr)
     resp = {'code':-1, 'reason':u'发送失败'}
@@ -91,6 +90,10 @@ def post_to_client(host, attr):
         if isinstance(content, str):
             content = json.loads(content)
         if content['ack_nak'] == 'ACK':
+            if attr['type'] == 'send':
+                print "SEND"
+            elif attr['type'] == 'stop':
+                print "STOP"
             resp = {'code': 0, 'data': content}
         else:
             print "--------post refused-------"
@@ -138,18 +141,16 @@ def update_room_info():
         room.save()
         if not room.service:
             continue
-        if room.speed == 0:
-            room.service = 0
         if (room.setting_temperature >= room.room_temperature + 0.1 and mode == 0) or (room.setting_temperature + 0.1 <= room.room_temperature and mode == 2):
-            room.speed = 0
             room.service = 0
         if room.service == 0:
             resp = post_to_client(room.ip_address, {'type':'stop', 'source': 'host'})
-        print 'numbers', room.numbers
-        update_cost(room.id, POWER_PER_MIN[room.speed], room.price)
-        room.power += POWER_PER_MIN[room.speed]
-        room.total_cost = room.power * room.price
-        room.save()
+        if room.service == 1:
+            update_cost(room.id, POWER_PER_MIN[room.speed], room.price)
+            room.power += POWER_PER_MIN[room.speed]
+            room.total_cost = room.power * room.price
+            room.save()
+
     service_count = query.filter(service=1).count()
     if service_count < 3:
         rooms = query.filter(service=0, speed__gt=0).all()
@@ -159,10 +160,10 @@ def update_room_info():
             resp = post_to_client(room.ip_address, {'type':'send', 'source':'host'})
             if resp['code'] == 0:
                 room.service = 1
+                print "start service"
                 room.start_service_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 room.save()
             break
-
     return JsonResponse({'code': 0})
 
 
@@ -351,7 +352,10 @@ def communication(request):
         return resp
     elif op == 'require':
         speed = request.POST.get('speed', 'low')
+        print "start stop"
+        resp = post_to_client(room.ip_address, {'type':'stop', 'source': 'host'})
         room.speed = RESPEED[speed]
+        room.service = 0
         room.save()
         resp = JsonResponse({'type':'require', 'source':'host', 'ack_nak': 'ACK'})
         resp['Access-Control-Allow-Origin'] = '*'
