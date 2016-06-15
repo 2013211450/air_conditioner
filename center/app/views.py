@@ -121,8 +121,7 @@ def update_cost(room_id, power, price):
     new_cost.day_cost += power * price
     new_cost.save()
 
-@login_required
-def update_room_info(request):
+def update_room_info():
     mode = Server.get_attr('mode')
     query = Room.objects.select_for_update().filter(host=Server.get_host(), link=1)
     for room in query.all():
