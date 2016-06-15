@@ -54,6 +54,7 @@ def control_settings(request):
     if request.method == 'POST':
         host = request.POST.get('host', '127.0.0.1:8000')
         room = Room.objects.get(user_id=request.user.id)
+        print 'link host: ', host
         room.host = host
         room.ip_address = get_server_host() + ':' + request.get_port()
         print room.ip_address
@@ -89,10 +90,12 @@ def operator(request):
                 room.mode = 0
             '''
             if mode == 0:
-                if room.setting_temperature < 25.1 and room.setting_temperature > 17.9:
+                if room.setting_temperature < 25.1 and temperature > 0:
+                    room.setting_temperature += temperature
+                elif room.setting_temperature > 17.9 and temperature < 0:
                     room.setting_temperature += temperature
             elif mode == 2:
-                if room.setting_temperature < 30.1 and room.setting_temperature > 24.9:
+                if (temperature > 0 and room.setting_temperature < 30.1) or (temperature < 0 and room.setting_temperature > 24.9):
                     room.setting_temperature += temperature
             resp['setting_temperature'] = room.setting_temperature
             room.save()

@@ -94,22 +94,16 @@ def post_to_client(host, attr):
             resp = {'code': 0, 'data': content}
         else:
             print "--------post refused-------"
-            print content
     except Exception, ex:
         print ex
-        print attr['type']
     return resp
 
 
 def query_room_temperature(host, numbers):
-    print "query temperature====="
     data = {'type':'check_temperature', 'source':'host'}
     resp = post_to_client(host, data)
     ans = {}
     if resp['code'] == 0:
-        print "data: "
-        print resp['data']
-        print "========="
         ans['room_temperature'] = resp['data']['room_temperature']
         ans['setting_temperature'] = resp['data']['setting_temperature']
         ans['code'] = 0
@@ -132,8 +126,6 @@ def update_room_info(request):
     mode = Server.get_attr('mode')
     query = Room.objects.select_for_update().filter(host=Server.get_host(), link=1)
     for room in query.all():
-        print room.numbers
-        print room.ip_address
         resp = query_room_temperature(room.ip_address, room.numbers)
         if not room.link:
             continue
@@ -194,7 +186,6 @@ def profile(request):
         server_init()
     server.work = 1
     server.save()
-    print server.host
     count = Room.objects.filter(host=server.host).count()
     page_count = (count + page_size - 1)/ page_size
     if page_count < 1:
@@ -206,7 +197,6 @@ def profile(request):
     rooms = Room.objects.filter(host=server.host)[offset:(offset+page_size)]
     data = []
     for room in rooms:
-        print 'is_link: ', room.link 
         is_service = u'服务中'
         is_link = u'已连接'
         if not room.service:
@@ -244,7 +234,6 @@ def account_login(request):
         user = auth.authenticate(username=username, password=password)
         if user and user.is_active:
             auth.login(request, user)
-            print request.user.username
             server = Server.objects.filter(user_id=request.user.id).first()
             today = date.today()
             if today.month > 3 and today.month < 10:
@@ -328,6 +317,7 @@ def get_rand_name():
 def communication(request):
     import pdb
     # pdb.set_trace()
+    print "start=====com"
     if request.method != 'POST':
         resp = JsonResponse({'type': 'login', 'source': 'host', 'ack_nak': 'NAK'})
         resp['Access-Control-Allow-Origin'] = '*'
