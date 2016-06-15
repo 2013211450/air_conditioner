@@ -35,7 +35,7 @@ def profile(request):
         update_cost(room)
     room.save()
     count = Room.objects.filter(link=1).count()
-    if count > 1:
+    if count > 0:
         rooms = Room.objects.filter(link=1).all()
         for r in rooms:
             if r.user_id == user.id:
@@ -226,7 +226,7 @@ def communication(request):
         resp['Access-Control-Allow-Origin'] = '*'
         return resp
     source = request.POST.get('source', '')
-    room = Room.objects.filter(ip_address=request.get_host(), link=1).first()
+    room = Room.objects.filter(link=1).first()
     op = request.POST.get('type', 'login')
     print "=====request room========", op
     print request.get_host()
