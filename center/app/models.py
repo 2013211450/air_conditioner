@@ -102,3 +102,14 @@ class CostPerDay(models.Model):
             ans += r.day_power
         return ans
 
+class RoomRequest(models.Model):
+
+    room_id = models.IntegerField(null=True, default=1, db_index=True)
+    start_time = models.DateTimeField(null=True, default=None)
+    end_time = models.DateTimeField(null=True, default=None)
+    start_temperature = models.FloatField(max_length=8, null=True, default=20.0)
+    end_temperature = models.FloatField(max_length=8, null=True, default=20.0)
+    power = models.FloatField(max_length=8, null=True, default=0.0)
+    cost = models.FloatField(max_length=8, null=True, default=0.0)
+    speed = models.IntegerField(null=True, default=0)
+

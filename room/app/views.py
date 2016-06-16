@@ -29,7 +29,6 @@ def profile(request):
     if room.link == 1:
         mode = query_server_mode(room.host, room.numbers)
         if mode == -1:
-            room.link = 0
             room.service = 0
             room.speed = 0
         update_cost(room)
@@ -38,13 +37,15 @@ def profile(request):
     if count > 0:
         rooms = Room.objects.filter(link=1).all()
         for r in rooms:
-            if r.user_id == user.id:
+            if r == room:
+                print r.numbers
                 continue
+            print "break ", r.numbers
             r.link=0
             r.speed=0
             r.save()
 
-    print 'ip_address', room.ip_address
+    print 'room_numbers: ', room.numbers
     print 'is_link: ', room.link
     return render(request, 'index.html', {'user': request.user, 'room':room, 'speed':SPEED[room.speed], 'mode': MODE[mode]})
 
@@ -60,6 +61,8 @@ def control_settings(request):
         print room.ip_address
         resp = connect_to_server(room.numbers, room.host, 'http://'+room.ip_address)
         if resp['code'] == 0:
+            print "======link sus====="
+            print room.numbers
             room.link = 1
             room.save()
         return JsonResponse(resp)
@@ -72,11 +75,10 @@ def operator(request):
         if request.POST.has_key('speed'):
             speed = (room.speed + 1) % 4
             resp = post_to_server(room.host, {'type':'require', 'source':room.numbers, 'speed':SPEED_DICT[speed]})
-            if resp['code'] == 0:
-                room.speed = speed
-                room.save()
-            else:
+            room.speed = speed
+            if resp['code'] != 0:
                 print resp['code']
+            room.save()
             resp = {'code' : 0, 'msg':'success'}
             resp['speed_mode'] = SPEED[room.speed] 
         if request.POST.has_key('temperature'):
@@ -101,9 +103,9 @@ def operator(request):
             room.save()
     return JsonResponse(resp)
 
-def post_to_server(host, data):
+def post_to_server(host, attr):
     req = urllib2.Request('http://' + host + '/communication')
-    data = urllib.urlencode(data)
+    data = urllib.urlencode(attr)
     resp = {'code':-1, 'reason':u'发送失败'}
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
     try:
@@ -113,6 +115,10 @@ def post_to_server(host, data):
             content = json.loads(content)
         if content['ack_nak'] == 'ACK':
             resp = {'code': 0, 'data': content}
+        if attr['type'] == 'login':
+            print "=================="
+            print "numbers:  ", attr['source']
+            print content
     except Exception, ex:
         print ex
     return resp
@@ -123,6 +129,8 @@ def query_server_mode(host, numbers):
     if resp['code'] == 0:
         data = resp['data']
         return MODE_DICT[data['mode']]
+    else:
+        print resp
     return -1
 
 def update_cost(room):
@@ -201,7 +209,7 @@ def get_info(request):
     if room.service == 1:
         mode = query_server_mode(room.host, room.numbers)
         if mode == -1:
-            room.link = 0
+            # room.link = 0
             room.service = 0
             room.speed = 0
             room.save()
@@ -227,6 +235,8 @@ def communication(request):
         return resp
     source = request.POST.get('source', '')
     room = Room.objects.filter(link=1).first()
+    print "=============numbers======"
+    print "numbers: ", room.numbers
     op = request.POST.get('type', 'login')
     print "=====request room========", op
     print request.get_host()

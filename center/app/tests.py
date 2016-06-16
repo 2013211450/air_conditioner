@@ -19,4 +19,5 @@ if __name__ == '__main__':
     print BASE_DIR
     while True:
         update_room_info()
+        print "query room info"
         time.sleep(2)

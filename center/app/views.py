@@ -8,7 +8,7 @@ from service import get_server_host
 from datetime import datetime, timedelta, date
 import json
 import urllib2, urllib
-from models import Server, Room, CostPerDay
+from models import Server, Room, CostPerDay, RoomRequest
 # Create your views here.
 MODE = ['cold', 'wait', 'hot']
 
@@ -43,6 +43,13 @@ def server_init():
         room.link = 0
         room.save()
 
+def stop_cost(room_id, room_temperature):
+    old_cost = RoomRequest.objects.filter(room_id=room_id).order_by("-id").first()
+    old_cost.end_time = datetime.now()
+    old_cost.end_temperature = room_temperature
+    old_cost.save()
+
+
 @login_required
 def get_report(request):
     print request.GET
@@ -50,28 +57,31 @@ def get_report(request):
     if not room_id:
         return HttpResponseRedirect('/')
     room_id = int(room_id)
-    start_date = request.GET.get('start_date', None)
-    if not start_date:
-        start_date = date.today()
-    end_date = request.GET.get('end_date', None)
-    if not end_date:
-        end_date = date.today()
-    query = CostPerDay.objects.filter(room_id=room_id, create_time__gte=start_date, create_time__lte=end_date)
+    # start_date = request.GET.get('start_date', None)
+    # if not start_date:
+    #   start_date = date.today()
+    # end_date = request.GET.get('end_date', None)
+    # if not end_date:
+    #    end_date = date.today()
+    # query = CostPerDay.objects.filter(room_id=room_id, create_time__gte=start_date, create_time__lte=end_date)
+    query = RoomRequest.objects.filter(room_id=room_id).all()
     data = query.all()
-    if query.count() > 10:
-        data = data[0:10]
     resp = {}
     resp['list'] = []
     resp['numbers'] = Room.objects.filter(id=room_id).first().numbers
     total_power = 0.0
     total_cost = 0.0
     for r in data:
-        total_power += r.day_power
-        total_cost += r.day_cost
+        total_power += r.power
+        total_cost += r.cost
         resp['list'].append({
-            'date': str(r.create_time),
-            'power': r.day_power,
-            'cost': r.day_cost,
+            'start_time': str(r.start_time),
+            'end_time': str(r.end_time),
+            'speed': SPEED_DICT[SPEED[r.speed]],
+            'start_temperature': r.start_temperature,
+            'end_temperature': r.end_temperature,
+            'power': r.power,
+            'cost': r.cost,
         })
     resp['total_cost'] = total_cost
     resp['total_power'] = total_power
@@ -85,7 +95,7 @@ def post_to_client(host, attr):
     resp = {'code':-1, 'reason':u'发送失败'}
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
     try:
-        response = opener.open(req, data, timeout=2)
+        response = opener.open(req, data, timeout=4)
         content = response.read()
         if isinstance(content, str):
             content = json.loads(content)
@@ -117,11 +127,9 @@ def query_room_temperature(host, numbers):
 
 
 def update_cost(room_id, power, price):
-    new_cost = CostPerDay.objects.filter(room_id=room_id, create_time=date.today()).first()
-    if not new_cost:
-        new_cost = CostPerDay.objects.create(room_id=room_id, create_time=date.today())
-    new_cost.day_power += power
-    new_cost.day_cost += power * price
+    new_cost = RoomRequest.objects.filter(room_id=room_id).order_by("-id").first()
+    new_cost.power += power
+    new_cost.cost += power * price
     new_cost.save()
 
 def update_room_info():
@@ -138,12 +146,17 @@ def update_room_info():
             room.link = 0
             room.service = 0
             print "break link!"
+        speed = room.speed
         room.save()
         if not room.service:
             continue
         if (room.setting_temperature >= room.room_temperature + 0.1 and mode == 0) or (room.setting_temperature + 0.1 <= room.room_temperature and mode == 2):
             room.service = 0
         if room.service == 0:
+            old_cost = RoomRequest.objects.filter(room_id=room.id).order_by("-id").first()
+            old_cost.end_time = datetime.now()
+            old_cost.end_temperature = room.room_temperature
+            old_cost.save()
             resp = post_to_client(room.ip_address, {'type':'stop', 'source': 'host'})
         if room.service == 1:
             update_cost(room.id, POWER_PER_MIN[room.speed], room.price)
@@ -155,11 +168,13 @@ def update_room_info():
     if service_count < 3:
         rooms = query.filter(service=0, speed__gt=0).all()
         for room in rooms:
+            speed = room.speed
             if (room.setting_temperature >= room.room_temperature + 0.1 and mode == 0) or (room.setting_temperature + 0.1 <= room.room_temperature and mode == 2):
                 continue
             resp = post_to_client(room.ip_address, {'type':'send', 'source':'host'})
             if resp['code'] == 0:
                 room.service = 1
+                room_request = RoomRequest.objects.create(room_id=room.id, start_time=datetime.now(), power = 0, cost = 0, start_temperature=room.room_temperature, speed=speed)
                 print "start service"
                 room.start_service_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 room.save()
@@ -266,8 +281,12 @@ def account_logout(request):
     server.save()
     rooms = Room.objects.all()
     for room in rooms:
+        if room.service == 1:
+            resp = post_to_client(room.ip_address, {'type':'stop', 'source': 'host'})
         room.link = 0
+        room.service = 0
         room.save()
+    return HttpResponseRedirect('/')
 
 @login_required
 def checkout(request):
@@ -354,6 +373,7 @@ def communication(request):
         speed = request.POST.get('speed', 'low')
         print "start stop"
         resp = post_to_client(room.ip_address, {'type':'stop', 'source': 'host'})
+        stop_cost(room.id, room.room_temperature)
         room.speed = RESPEED[speed]
         room.service = 0
         room.save()

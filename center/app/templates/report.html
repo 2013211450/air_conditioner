@@ -34,19 +34,31 @@
         <div class="row">
 			<table width="1000" border="2" cellspacing="1" class="table">
 				<tr>
-					<th>日期</th>
+					<th>开始时间</th>
+					<th>结束时间</th>
+					<th>开始温度</th>
+					<th>结束温度</th>
+					<th>风速</th>
 					<th>电量</th>
 					<th>金额</th>
 				</tr>
 				{% for room in list %}
 					<tr>
-						<td>{{ room.date }}</td>
+						<td>{{ room.start_time }}</td>
+						<td>{{ room.end_time }}</td>
+						<td>{{ room.start_temperature }}</td>
+						<td>{{ room.end_temperature }}</td>
+						<td>{{ room.speed }}</td>
 						<td>{{ room.power }}</td>
 						<td>{{ room.cost }}</td>
 					</tr>
 				{% endfor %}
 				<tr>
 					<td>总计</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
 					<td>{{ total_power }}</td>
 					<td>{{ total_cost }}</td>
 				</tr>

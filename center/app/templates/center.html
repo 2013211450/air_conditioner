@@ -1,9 +1,16 @@
 {% extends 'base.html' %}
 {% block main_text %}
     <script type="text/javascript">
-		setInterval(function() {
+		var timefq = setInterval(function() {
 				location.reload(true);
 			}, 2000);
+	function change_frequence() {
+		var new_fq = $("#frequence_id").val();
+		//clearInterval(timefq);
+		timefq = setInterval(function() {
+			location.reload(true);
+			}, new_fq * 1000);
+	}
 	function change_mode(attr) {
 		$.post('/change/', {
 			type: attr,
@@ -67,6 +74,7 @@
 				{% endfor %}
 			</table>
 		</div></br></br></br></br>
+
         <div class="pagination">
             <ul>
                 <li>
@@ -77,5 +85,9 @@
                 </li>
             </ul>
         </div>
+		<div>
+			<input id="frequence_id" type="text" placeholder="2" />
+			<button class="btn btn-default pull-right" onclick="change_frequence();">更新频率</button>
+		</div>
     </div>
 {% endblock %}
